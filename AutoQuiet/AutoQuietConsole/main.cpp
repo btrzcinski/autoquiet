@@ -157,6 +157,8 @@ HRESULT MainRoutine()
         return hr;
     }
 
+    // NOTE: This part (QI for ISimpleAudioVolume) is not supported by Microsoft and subject to breakage
+    // in a future release of Windows. However, it does seem to work at least as of Windows 10.0.14361.
     CComPtr<ISimpleAudioVolume> spChromeSimpleAudioVolume;
     if (FAILED(hr = spChromeSessionControl->QueryInterface(&spChromeSimpleAudioVolume))) {
         fprintf(stderr, "Failed to QI for ISimpleAudioVolume from Chrome session control: %#010x\r\n", hr);
