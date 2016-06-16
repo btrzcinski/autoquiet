@@ -28,7 +28,7 @@ public:
     // Inherited via IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject) override
     {
-        if (*ppvObject == nullptr) return E_POINTER;
+        if (ppvObject == nullptr) return E_POINTER;
 
         if (riid == __uuidof(IUnknown)) {
             *ppvObject = static_cast<IUnknown*>(this);
