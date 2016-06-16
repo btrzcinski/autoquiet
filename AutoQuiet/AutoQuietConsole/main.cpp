@@ -208,7 +208,7 @@ HRESULT MainRoutine()
     printf("Press Enter to exit.\r\n");
     getchar();
     if (FAILED(hr = spFirefoxSessionControl->UnregisterAudioSessionNotification(spFirefoxEventSink))) {
-        fprintf(stderr, "Failed to unregister for audio session notifications for Chrome: %#010x\r\n", hr);
+        fprintf(stderr, "Failed to unregister for audio session notifications for Firefox: %#010x\r\n", hr);
         return hr;
     }
 
