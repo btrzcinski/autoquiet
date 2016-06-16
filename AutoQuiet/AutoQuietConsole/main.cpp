@@ -125,14 +125,14 @@ HRESULT MainRoutine()
 {
     auto hr = S_OK;
 
-    if (FAILED(hr = ListAudioSessionsOnPrimaryDevice())) {
-        fprintf(stderr, "Failed to list audio sessions: %#010x\r\n", hr);
-        return hr;
-    }
-
     DWORD chromePid, firefoxPid;
     if (FAILED(hr = GetProcessIdForProcessName(L"chrome.exe", &chromePid))) {
         fprintf(stderr, "Failed to get chrome.exe PID: %#010x\r\n", hr);
+        return hr;
+    }
+
+    if (chromePid == 0) {
+        fprintf(stderr, "Chrome isn't running; start it first.\r\n");
         return hr;
     }
 
@@ -140,6 +140,11 @@ HRESULT MainRoutine()
 
     if (FAILED(hr = GetProcessIdForProcessName(L"firefox.exe", &firefoxPid))) {
         fprintf(stderr, "Failed to get firefox.exe PID: %#010x\r\n", hr);
+        return hr;
+    }
+
+    if (firefoxPid == 0) {
+        fprintf(stderr, "Firefox isn't running; start it first.\r\n");
         return hr;
     }
 
