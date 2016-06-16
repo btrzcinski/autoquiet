@@ -155,10 +155,20 @@ HRESULT MainRoutine()
         fprintf(stderr, "Failed to get Firefox (PID %d) audio session control: %#010x\r\n", firefoxPid, hr);
         return hr;
     }
+    
+    if (spFirefoxSessionControl == nullptr) {
+        fprintf(stderr, "There isn't any audio session associated with Firefox. Try playing audio first.\r\n");
+        return hr;
+    }
 
     CComPtr<IAudioSessionControl2> spChromeSessionControl;
     if (FAILED(hr = GetAudioSessionForProcessId(chromePid, &spChromeSessionControl))) {
         fprintf(stderr, "Failed to get Chrome (PID %d) audio session control: %#010x\r\n", chromePid, hr);
+        return hr;
+    }
+    
+    if (spChromeSessionControl == nullptr) {
+        fprintf(stderr, "There isn't any audio session associated with Chrome. Try playing audio first.\r\n");
         return hr;
     }
 
