@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include "AudioSessionEventsSink.h"
+
 HRESULT GetAudioSessionEnumerator(IAudioSessionEnumerator **ppSessionEnumerator)
 {
     if (ppSessionEnumerator == nullptr) return E_POINTER;
@@ -12,7 +14,7 @@ HRESULT GetAudioSessionEnumerator(IAudioSessionEnumerator **ppSessionEnumerator)
 
     CComPtr<IAudioSessionManager2> spSessionManager;
     IF_FAIL_RET_HR(spDefaultDevice->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, nullptr, (void**)&spSessionManager));
-    
+
     IF_FAIL_RET_HR(spSessionManager->GetSessionEnumerator(ppSessionEnumerator));
 
     return S_OK;
@@ -42,7 +44,7 @@ HRESULT ListAudioSessionsOnPrimaryDevice()
 
         CComHeapPtr<wchar_t> sessionIdentifier, sessionInstanceIdentifier;
         DWORD processId;
-        
+
         IF_FAIL_RET_HR(spAudioSessionControl2->GetSessionIdentifier(&sessionIdentifier));
         IF_FAIL_RET_HR(spAudioSessionControl2->GetSessionInstanceIdentifier(&sessionInstanceIdentifier));
         IF_FAIL_RET_HR(spAudioSessionControl2->GetProcessId(&processId));
@@ -118,6 +120,94 @@ HRESULT GetAudioSessionForProcessId(DWORD processId, IAudioSessionControl2 **ppS
     return S_FALSE;
 }
 
+// Assumes COM has been initialized.
+HRESULT MainRoutine()
+{
+    auto hr = S_OK;
+
+    if (FAILED(hr = ListAudioSessionsOnPrimaryDevice())) {
+        fprintf(stderr, "Failed to list audio sessions: %#010x\r\n", hr);
+        return hr;
+    }
+
+    DWORD chromePid, firefoxPid;
+    if (FAILED(hr = GetProcessIdForProcessName(L"chrome.exe", &chromePid))) {
+        fprintf(stderr, "Failed to get chrome.exe PID: %#010x\r\n", hr);
+        return hr;
+    }
+
+    printf("chrome.exe PID: %d\r\n", chromePid);
+
+    if (FAILED(hr = GetProcessIdForProcessName(L"firefox.exe", &firefoxPid))) {
+        fprintf(stderr, "Failed to get firefox.exe PID: %#010x\r\n", hr);
+        return hr;
+    }
+
+    printf("firefox.exe PID: %d\r\n", firefoxPid);
+
+    CComPtr<IAudioSessionControl2> spFirefoxSessionControl;
+    if (FAILED(hr = GetAudioSessionForProcessId(firefoxPid, &spFirefoxSessionControl))) {
+        fprintf(stderr, "Failed to get Firefox (PID %d) audio session control: %#010x\r\n", firefoxPid, hr);
+        return hr;
+    }
+
+    CComPtr<IAudioSessionControl2> spChromeSessionControl;
+    if (FAILED(hr = GetAudioSessionForProcessId(chromePid, &spChromeSessionControl))) {
+        fprintf(stderr, "Failed to get Chrome (PID %d) audio session control: %#010x\r\n", chromePid, hr);
+        return hr;
+    }
+
+    CComPtr<ISimpleAudioVolume> spChromeSimpleAudioVolume;
+    if (FAILED(hr = spChromeSessionControl->QueryInterface(&spChromeSimpleAudioVolume))) {
+        fprintf(stderr, "Failed to QI for ISimpleAudioVolume from Chrome session control: %#010x\r\n", hr);
+        return hr;
+    }
+
+    auto dimChromeWhenFirefoxIsActiveCallbackFn =
+        [spChromeSimpleAudioVolume](AudioSessionState newState)
+    {
+        if (newState == AudioSessionStateActive) {
+            // Firefox is active, so dim Chrome to 20%
+            if (FAILED(spChromeSimpleAudioVolume->SetMasterVolume(0.2f, nullptr))) {
+                fprintf(stderr, "Failed to set Chrome volume to 20%%\r\n");
+            }
+            else {
+                printf("Set Chrome volume to 20%%\r\n");
+            }
+        }
+        else if (newState == AudioSessionStateInactive) {
+            // Firefox is inactive, so set Chrome back to 100%
+            if (FAILED(spChromeSimpleAudioVolume->SetMasterVolume(1.0f, nullptr))) {
+                fprintf(stderr, "Failed to set Chrome volume to 100%%\r\n");
+            }
+            else {
+                printf("Set Chrome volume to 100%%\r\n");
+            }
+        }
+    };
+
+    CComPtr<IAudioSessionEvents> spFirefoxEventSink;
+    if (FAILED(hr = AudioSessionEventsSinkWithStateCallback::Create(&spFirefoxEventSink,
+        dimChromeWhenFirefoxIsActiveCallbackFn))) {
+        fprintf(stderr, "Failed to create new audio session events sink for Firefox: %#010x\r\n", hr);
+        return hr;
+    }
+
+    if (FAILED(hr = spFirefoxSessionControl->RegisterAudioSessionNotification(spFirefoxEventSink))) {
+        fprintf(stderr, "Failed to register for audio session notifications for Firefox: %#010x\r\n", hr);
+        return hr;
+    }
+
+    printf("Press Enter to exit.\r\n");
+    getchar();
+    if (FAILED(hr = spFirefoxSessionControl->UnregisterAudioSessionNotification(spFirefoxEventSink))) {
+        fprintf(stderr, "Failed to unregister for audio session notifications for Chrome: %#010x\r\n", hr);
+        return hr;
+    }
+
+    return hr;
+}
+
 int main()
 {
     auto hr = S_OK;
@@ -127,40 +217,7 @@ int main()
         return 1;
     }
 
-    //if (FAILED(hr = ListAudioSessionsOnPrimaryDevice())) {
-    //    fprintf(stderr, "Failed to list audio sessions: %#010x\r\n", hr);
-    //}
-
-    DWORD chromePid, spotifyPid;
-    if (FAILED(hr = GetProcessIdForProcessName(L"chrome.exe", &chromePid))) {
-        fprintf(stderr, "Failed to get chrome.exe PID: %#010x\r\n", hr);
-    }
-    else {
-        printf("chrome.exe PID: %d\r\n", chromePid);
-    }
-    if (FAILED(hr = GetProcessIdForProcessName(L"spotify.exe", &spotifyPid))) {
-        fprintf(stderr, "Failed to get spotify.exe PID: %#010x\r\n", hr);
-    }
-    else {
-        printf("spotify.exe PID: %d\r\n", spotifyPid);
-    }
-
-    CComPtr<IAudioSessionControl2> spChromeSessionControl;
-    if (FAILED(hr = GetAudioSessionForProcessId(chromePid, &spChromeSessionControl))) {
-        fprintf(stderr, "Failed to get Chrome (PID %d) audio session control: %#010x\r\n", chromePid, hr);
-    }
-    else {
-        CComPtr<ISimpleAudioVolume> spChromeSimpleVolume;
-        if (FAILED(hr = spChromeSessionControl->QueryInterface(&spChromeSimpleVolume))) {
-            fprintf(stderr, "Failed to QI for ISimpleAudioVolume from Chrome audio session control: %#010x\r\n", hr);
-        }
-        else {
-            printf("Cranking Chrome up to 100%%\r\n");
-            if (FAILED(hr = spChromeSimpleVolume->SetMasterVolume(1.0f, nullptr))) {
-                fprintf(stderr, "Failed to crank Chrome up to 100%%: %#010x\r\n", hr);
-            }
-        }
-    }
+    hr = MainRoutine();
 
     CoUninitialize();
 
