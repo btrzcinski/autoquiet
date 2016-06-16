@@ -156,7 +156,7 @@ HRESULT MainRoutine()
         return hr;
     }
     
-    if (spFirefoxSessionControl == nullptr) {
+    if (hr == S_FALSE) {
         fprintf(stderr, "There isn't any audio session associated with Firefox. Try playing audio first.\r\n");
         return hr;
     }
@@ -167,7 +167,7 @@ HRESULT MainRoutine()
         return hr;
     }
     
-    if (spChromeSessionControl == nullptr) {
+    if (hr == S_FALSE) {
         fprintf(stderr, "There isn't any audio session associated with Chrome. Try playing audio first.\r\n");
         return hr;
     }
