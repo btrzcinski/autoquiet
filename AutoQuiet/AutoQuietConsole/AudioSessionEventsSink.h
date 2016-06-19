@@ -8,10 +8,11 @@ public:
     using StateCallback = std::function<void(AudioSessionState)>;
 
 private:
-    int m_refCount = 1;
+    LONG m_refCount;
     StateCallback stateCallback;
 
     AudioSessionEventsSinkWithStateCallback(StateCallback const& stateCallback)
+        : m_refCount(1)
     {
         this->stateCallback = stateCallback;
     }
@@ -31,21 +32,24 @@ public:
         if (ppvObject == nullptr) return E_POINTER;
 
         if (riid == __uuidof(IUnknown)) {
+            AddRef();
             *ppvObject = static_cast<IUnknown*>(this);
         }
         else if (riid == __uuidof(IAudioSessionEvents)) {
+            AddRef();
             *ppvObject = static_cast<IAudioSessionEvents*>(this);
         }
 
+        *ppvObject = nullptr;
         return E_NOINTERFACE;
     }
     virtual ULONG STDMETHODCALLTYPE AddRef(void) override
     {
-        return ++m_refCount;
+        return InterlockedIncrement(&m_refCount);
     }
     virtual ULONG STDMETHODCALLTYPE Release(void) override
     {
-        auto newRefCount = --m_refCount;
+        auto newRefCount = InterlockedDecrement(&m_refCount);
         if (newRefCount == 0) {
             delete this;
         }
