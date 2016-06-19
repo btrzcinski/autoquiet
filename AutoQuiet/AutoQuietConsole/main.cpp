@@ -120,6 +120,64 @@ HRESULT GetAudioSessionForProcessId(DWORD processId, IAudioSessionControl2 **ppS
     return S_FALSE;
 }
 
+HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2 *pSession,
+    IAudioSessionControl2* pPrioritySession)
+{
+    auto hr = S_OK;
+
+    // NOTE: This part (QI for ISimpleAudioVolume) is not supported by Microsoft and subject to breakage
+    // in a future release of Windows. However, it does seem to work at least as of Windows 10.0.14361.
+    CComPtr<ISimpleAudioVolume> spSessionVolume;
+    if (FAILED(hr = pSession->QueryInterface(&spSessionVolume))) {
+        fprintf(stderr, "Failed to QI for ISimpleAudioVolume from session control: %#010x\r\n", hr);
+        return hr;
+    }
+
+    auto dimSessionWhenPrioritySessionIsActiveCallbackFn =
+        [spSessionVolume](AudioSessionState newState)
+    {
+        if (newState == AudioSessionStateActive) {
+            // Priority session is active, so dim session to 20%
+            if (FAILED(spSessionVolume->SetMasterVolume(0.2f, nullptr))) {
+                fprintf(stderr, "Failed to set session volume to 20%%\r\n");
+            }
+            else {
+                printf("Set session volume to 20%%\r\n");
+            }
+        }
+        else if (newState == AudioSessionStateInactive) {
+            // Priority session is inactive, so set session back to 100%
+            if (FAILED(spSessionVolume->SetMasterVolume(1.0f, nullptr))) {
+                fprintf(stderr, "Failed to set session volume to 100%%\r\n");
+            }
+            else {
+                printf("Set session volume to 100%%\r\n");
+            }
+        }
+    };
+
+    CComPtr<IAudioSessionEvents> spPrioritySessionEventSink;
+    if (FAILED(hr = AudioSessionEventsSinkWithStateCallback::Create(&spPrioritySessionEventSink,
+        dimSessionWhenPrioritySessionIsActiveCallbackFn))) {
+        fprintf(stderr, "Failed to create new audio session events sink for priority session: %#010x\r\n", hr);
+        return hr;
+    }
+
+    if (FAILED(hr = pPrioritySession->RegisterAudioSessionNotification(spPrioritySessionEventSink))) {
+        fprintf(stderr, "Failed to register for audio session notifications for priority session: %#010x\r\n", hr);
+        return hr;
+    }
+
+    printf("Press Enter to exit.\r\n");
+    getchar();
+    if (FAILED(hr = pPrioritySession->UnregisterAudioSessionNotification(spPrioritySessionEventSink))) {
+        fprintf(stderr, "Failed to unregister for audio session notifications for priority session: %#010x\r\n", hr);
+        return hr;
+    }
+
+    return hr;
+}
+
 // Assumes COM has been initialized.
 HRESULT MainRoutine()
 {
@@ -172,55 +230,7 @@ HRESULT MainRoutine()
         return hr;
     }
 
-    // NOTE: This part (QI for ISimpleAudioVolume) is not supported by Microsoft and subject to breakage
-    // in a future release of Windows. However, it does seem to work at least as of Windows 10.0.14361.
-    CComPtr<ISimpleAudioVolume> spChromeSimpleAudioVolume;
-    if (FAILED(hr = spChromeSessionControl->QueryInterface(&spChromeSimpleAudioVolume))) {
-        fprintf(stderr, "Failed to QI for ISimpleAudioVolume from Chrome session control: %#010x\r\n", hr);
-        return hr;
-    }
-
-    auto dimChromeWhenFirefoxIsActiveCallbackFn =
-        [spChromeSimpleAudioVolume](AudioSessionState newState)
-    {
-        if (newState == AudioSessionStateActive) {
-            // Firefox is active, so dim Chrome to 20%
-            if (FAILED(spChromeSimpleAudioVolume->SetMasterVolume(0.2f, nullptr))) {
-                fprintf(stderr, "Failed to set Chrome volume to 20%%\r\n");
-            }
-            else {
-                printf("Set Chrome volume to 20%%\r\n");
-            }
-        }
-        else if (newState == AudioSessionStateInactive) {
-            // Firefox is inactive, so set Chrome back to 100%
-            if (FAILED(spChromeSimpleAudioVolume->SetMasterVolume(1.0f, nullptr))) {
-                fprintf(stderr, "Failed to set Chrome volume to 100%%\r\n");
-            }
-            else {
-                printf("Set Chrome volume to 100%%\r\n");
-            }
-        }
-    };
-
-    CComPtr<IAudioSessionEvents> spFirefoxEventSink;
-    if (FAILED(hr = AudioSessionEventsSinkWithStateCallback::Create(&spFirefoxEventSink,
-        dimChromeWhenFirefoxIsActiveCallbackFn))) {
-        fprintf(stderr, "Failed to create new audio session events sink for Firefox: %#010x\r\n", hr);
-        return hr;
-    }
-
-    if (FAILED(hr = spFirefoxSessionControl->RegisterAudioSessionNotification(spFirefoxEventSink))) {
-        fprintf(stderr, "Failed to register for audio session notifications for Firefox: %#010x\r\n", hr);
-        return hr;
-    }
-
-    printf("Press Enter to exit.\r\n");
-    getchar();
-    if (FAILED(hr = spFirefoxSessionControl->UnregisterAudioSessionNotification(spFirefoxEventSink))) {
-        fprintf(stderr, "Failed to unregister for audio session notifications for Firefox: %#010x\r\n", hr);
-        return hr;
-    }
+    hr = LowerSessionVolumeWhenPrioritySessionBecomesActive(spChromeSessionControl, spFirefoxSessionControl);
 
     return hr;
 }
