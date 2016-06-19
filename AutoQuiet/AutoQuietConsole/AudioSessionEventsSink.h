@@ -67,7 +67,7 @@ public:
     }
     virtual HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float NewVolume, BOOL NewMute, LPCGUID EventContext) override
     {
-        printf("New volume: %f, new mute: %s\r\n", NewVolume, (NewMute ? "true" : "false"));
+        wprintf(L"New volume: %f, new mute: %s\r\n", NewVolume, (NewMute ? L"true" : L"false"));
 
         return S_OK;
     }
@@ -81,7 +81,22 @@ public:
     }
     virtual HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState NewState) override
     {
-        printf("New state: %d\r\n", NewState);
+        wchar_t *newStateStr = nullptr;
+        switch (NewState) {
+        case AudioSessionStateActive:
+            newStateStr = L"active";
+            break;
+        case AudioSessionStateExpired:
+            newStateStr = L"expired";
+            break;
+        case AudioSessionStateInactive:
+            newStateStr = L"inactive";
+            break;
+        default:
+            newStateStr = L"unknown";
+        }
+
+        wprintf(L"New state: %d (%ls)\r\n", NewState, newStateStr);
         this->stateCallback(NewState);
 
         return S_OK;

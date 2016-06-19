@@ -77,7 +77,7 @@ HRESULT GetProcessIdForProcessName(const wchar_t *processName, DWORD *pid)
 
         DWORD imageFilePathSize = ARRAYSIZE(imageFilePath);
         if (0 == QueryFullProcessImageName(procHandle, 0, imageFilePath, &imageFilePathSize)) {
-            printf("Couldn't get image name for PID = %d\r\n", bigPidArray[i]);
+            wprintf(L"Couldn't get image name for PID = %d\r\n", bigPidArray[i]);
             continue;
         }
 
@@ -129,7 +129,7 @@ HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2
     // in a future release of Windows. However, it does seem to work at least as of Windows 10.0.14361.
     CComPtr<ISimpleAudioVolume> spSessionVolume;
     if (FAILED(hr = pSession->QueryInterface(&spSessionVolume))) {
-        fprintf(stderr, "Failed to QI for ISimpleAudioVolume from session control: %#010x\r\n", hr);
+        fwprintf(stderr, L"Failed to QI for ISimpleAudioVolume from session control: %#010x\r\n", hr);
         return hr;
     }
 
@@ -139,19 +139,19 @@ HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2
         if (newState == AudioSessionStateActive) {
             // Priority session is active, so dim session to 20%
             if (FAILED(spSessionVolume->SetMasterVolume(0.2f, nullptr))) {
-                fprintf(stderr, "Failed to set session volume to 20%%\r\n");
+                fwprintf(stderr, L"Failed to set session volume to 20%%\r\n");
             }
             else {
-                printf("Set session volume to 20%%\r\n");
+                wprintf(L"Set session volume to 20%%\r\n");
             }
         }
         else if (newState == AudioSessionStateInactive) {
             // Priority session is inactive, so set session back to 100%
             if (FAILED(spSessionVolume->SetMasterVolume(1.0f, nullptr))) {
-                fprintf(stderr, "Failed to set session volume to 100%%\r\n");
+                fwprintf(stderr, L"Failed to set session volume to 100%%\r\n");
             }
             else {
-                printf("Set session volume to 100%%\r\n");
+                wprintf(L"Set session volume to 100%%\r\n");
             }
         }
     };
@@ -159,19 +159,19 @@ HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2
     CComPtr<IAudioSessionEvents> spPrioritySessionEventSink;
     if (FAILED(hr = AudioSessionEventsSinkWithStateCallback::Create(&spPrioritySessionEventSink,
         dimSessionWhenPrioritySessionIsActiveCallbackFn))) {
-        fprintf(stderr, "Failed to create new audio session events sink for priority session: %#010x\r\n", hr);
+        fwprintf(stderr, L"Failed to create new audio session events sink for priority session: %#010x\r\n", hr);
         return hr;
     }
 
     if (FAILED(hr = pPrioritySession->RegisterAudioSessionNotification(spPrioritySessionEventSink))) {
-        fprintf(stderr, "Failed to register for audio session notifications for priority session: %#010x\r\n", hr);
+        fwprintf(stderr, L"Failed to register for audio session notifications for priority session: %#010x\r\n", hr);
         return hr;
     }
 
-    printf("Press Enter to exit.\r\n");
+    wprintf(L"Press Enter to exit.\r\n");
     getchar();
     if (FAILED(hr = pPrioritySession->UnregisterAudioSessionNotification(spPrioritySessionEventSink))) {
-        fprintf(stderr, "Failed to unregister for audio session notifications for priority session: %#010x\r\n", hr);
+        fwprintf(stderr, L"Failed to unregister for audio session notifications for priority session: %#010x\r\n", hr);
         return hr;
     }
 
@@ -179,72 +179,77 @@ HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2
 }
 
 // Assumes COM has been initialized.
-HRESULT MainRoutine()
+HRESULT MainRoutine(const wchar_t *processName, const wchar_t *priorityProcessName)
 {
     auto hr = S_OK;
 
-    DWORD chromePid, firefoxPid;
-    if (FAILED(hr = GetProcessIdForProcessName(L"chrome.exe", &chromePid))) {
-        fprintf(stderr, "Failed to get chrome.exe PID: %#010x\r\n", hr);
+    DWORD processPid, priorityProcessPid;
+    if (FAILED(hr = GetProcessIdForProcessName(processName, &processPid))) {
+        fwprintf(stderr, L"Failed to get %ls PID: %#010x\r\n", processName, hr);
         return hr;
     }
 
-    if (chromePid == 0) {
-        fprintf(stderr, "Chrome isn't running; start it first.\r\n");
+    if (processPid == 0) {
+        fwprintf(stderr, L"%ls isn't running; start it first.\r\n", processName);
         return hr;
     }
 
-    printf("chrome.exe PID: %d\r\n", chromePid);
+    printf("%ls PID: %d\r\n", processName, processPid);
 
-    if (FAILED(hr = GetProcessIdForProcessName(L"firefox.exe", &firefoxPid))) {
-        fprintf(stderr, "Failed to get firefox.exe PID: %#010x\r\n", hr);
+    if (FAILED(hr = GetProcessIdForProcessName(priorityProcessName, &priorityProcessPid))) {
+        fwprintf(stderr, L"Failed to get %ls PID: %#010x\r\n", priorityProcessName, hr);
         return hr;
     }
 
-    if (firefoxPid == 0) {
-        fprintf(stderr, "Firefox isn't running; start it first.\r\n");
+    if (priorityProcessPid == 0) {
+        fwprintf(stderr, L"%ls isn't running; start it first.\r\n", priorityProcessName);
         return hr;
     }
 
-    printf("firefox.exe PID: %d\r\n", firefoxPid);
+    wprintf(L"%ls PID: %d\r\n", priorityProcessName, priorityProcessPid);
 
-    CComPtr<IAudioSessionControl2> spFirefoxSessionControl;
-    if (FAILED(hr = GetAudioSessionForProcessId(firefoxPid, &spFirefoxSessionControl))) {
-        fprintf(stderr, "Failed to get Firefox (PID %d) audio session control: %#010x\r\n", firefoxPid, hr);
-        return hr;
-    }
-    
-    if (hr == S_FALSE) {
-        fprintf(stderr, "There isn't any audio session associated with Firefox. Try playing audio first.\r\n");
-        return hr;
-    }
-
-    CComPtr<IAudioSessionControl2> spChromeSessionControl;
-    if (FAILED(hr = GetAudioSessionForProcessId(chromePid, &spChromeSessionControl))) {
-        fprintf(stderr, "Failed to get Chrome (PID %d) audio session control: %#010x\r\n", chromePid, hr);
+    CComPtr<IAudioSessionControl2> spPriorityProcessSessionControl;
+    if (FAILED(hr = GetAudioSessionForProcessId(priorityProcessPid, &spPriorityProcessSessionControl))) {
+        fwprintf(stderr, L"Failed to get %ls (PID %d) audio session control: %#010x\r\n", priorityProcessName, priorityProcessPid, hr);
         return hr;
     }
     
     if (hr == S_FALSE) {
-        fprintf(stderr, "There isn't any audio session associated with Chrome. Try playing audio first.\r\n");
+        fwprintf(stderr, L"There isn't any audio session associated with %ls. Try playing audio first.\r\n", priorityProcessName);
         return hr;
     }
 
-    hr = LowerSessionVolumeWhenPrioritySessionBecomesActive(spChromeSessionControl, spFirefoxSessionControl);
+    CComPtr<IAudioSessionControl2> spProcessSessionControl;
+    if (FAILED(hr = GetAudioSessionForProcessId(processPid, &spProcessSessionControl))) {
+        fwprintf(stderr, L"Failed to get %ls (PID %d) audio session control: %#010x\r\n", processName, processPid, hr);
+        return hr;
+    }
+    
+    if (hr == S_FALSE) {
+        fwprintf(stderr, L"There isn't any audio session associated with %ls. Try playing audio first.\r\n", processName);
+        return hr;
+    }
+
+    hr = LowerSessionVolumeWhenPrioritySessionBecomesActive(spProcessSessionControl, spPriorityProcessSessionControl);
 
     return hr;
 }
 
-int main()
+int wmain(int argc, wchar_t *argv[])
 {
-    auto hr = S_OK;
-
-    if (FAILED(hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
-        fprintf(stderr, "Failed to initialize COM: %#010x\r\n", hr);
+    if (argc != 3) {
+        fwprintf(stderr, L"Usage: %ls [process-to-dim.exe] [priority-process-to-monitor.exe]", argv[0]);
         return 1;
     }
 
-    hr = MainRoutine();
+    auto hr = S_OK;
+
+    if (FAILED(hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
+        fwprintf(stderr, L"Failed to initialize COM: %#010x\r\n", hr);
+        return 2;
+    }
+
+    hr = MainRoutine(argv[1], argv[2]);
 
     CoUninitialize();
 
