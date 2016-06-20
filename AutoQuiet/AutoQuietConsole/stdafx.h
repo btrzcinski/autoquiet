@@ -19,6 +19,7 @@
 
 #include <mmdeviceapi.h> // MM interfaces/classes
 #include <audiopolicy.h> // Audio session interfaces/classes
+#include <endpointvolume.h> // IAudioMeterInformation
 
 #include <cstdio>
 #include <memory>

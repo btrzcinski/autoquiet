@@ -56,7 +56,8 @@ HRESULT MainRoutine(const wchar_t *processName, const wchar_t *priorityProcessNa
         return hr;
     }
 
-    hr = LowerSessionVolumeWhenPrioritySessionBecomesActive(spProcessSessionControl, spPriorityProcessSessionControl);
+    //hr = LowerSessionVolumeWhenPrioritySessionBecomesActive(spProcessSessionControl, spPriorityProcessSessionControl);
+    hr = PrintPeakMeterValueOnInterval(spProcessSessionControl, 500);
 
     return hr;
 }

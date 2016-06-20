@@ -2,6 +2,59 @@
 
 #include "AudioSessionEventsSink.h"
 
+// Period is expressed in milliseconds
+HRESULT PrintPeakMeterValueOnInterval(IAudioSessionControl2 *pSession, UINT period)
+{
+    auto hr = S_OK;
+
+    CComPtr<IAudioMeterInformation> spMeterInformation;
+    if (FAILED(hr = pSession->QueryInterface(&spMeterInformation))) {
+        fwprintf(stderr, L"Failed to QI for IAudioMeterInformation from session control: %#010x\r\n", hr);
+        return hr;
+    }
+
+    CHandle timerHandle(CreateWaitableTimerW(nullptr, FALSE, nullptr));
+    if (timerHandle == nullptr) {
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        fwprintf(stderr, L"Failed to create timer object: %#010x\r\n", hr);
+        return hr;
+    }
+
+    LARGE_INTEGER timerDueTime;
+    // interval is in ms (10 ^ -3); timerDueTime is in 100-ns (10 ^ -7)
+    timerDueTime.QuadPart = -10000LL * period;
+
+    if (0 == SetWaitableTimer(timerHandle, &timerDueTime, period, nullptr, nullptr, FALSE)) {
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        fwprintf(stderr, L"Failed to setup timer object: %#010x\r\n", hr);
+        return hr;
+    }
+
+    wprintf(L"Press Ctrl-C to exit.\r\n");
+
+    while (1)
+    {
+        if (WaitForSingleObject(timerHandle, INFINITE) != WAIT_OBJECT_0) {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            fwprintf(stderr, L"WaitForSingleObject failed: %#010x\r\n", hr);
+            break;
+        }
+
+        auto peakValue = 0.0f;
+        if (FAILED(hr = spMeterInformation->GetPeakValue(&peakValue))) {
+            fwprintf(stderr, L"Failed to get peak value from meter information: %#010x\r\n", hr);
+            break;
+        }
+
+        wprintf(L"\rPeak value: %f", peakValue);
+    }
+    wprintf(L"\r\n");
+
+    CancelWaitableTimer(timerHandle);
+
+    return hr;
+}
+
 HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2 *pSession,
     IAudioSessionControl2* pPrioritySession)
 {
