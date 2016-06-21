@@ -138,7 +138,48 @@ HRESULT LowerSessionVolumeWhenPrioritySessionMakesNoise(IAudioSessionControl2 *p
 {
     auto hr = S_OK;
 
-    return hr;
+    CComPtr<ISimpleAudioVolume> spSessionVolume;
+    if (FAILED(hr = pProcessSessionControl->QueryInterface(&spSessionVolume))) {
+        fwprintf(stderr, L"Failed to QI for ISimpleAudioVolume from session control: %#010x\r\n", hr);
+        return hr;
+    }
+
+    auto dimSessionWhenPrioritySessionMakesNoiseCallbackFn =
+        [spSessionVolume](float newPrioritySessionPeakMeterValue)
+    {
+        static bool isPrioritySessionActive = false;
+
+        if (newPrioritySessionPeakMeterValue > 0.0f) {
+            if (isPrioritySessionActive) {
+                // We already know it's active
+                return;
+            }
+            
+            // Priority session is active, so dim session to 20%
+            isPrioritySessionActive = true;
+
+            if (FAILED(spSessionVolume->SetMasterVolume(0.2f, nullptr))) {
+                fwprintf(stderr, L"Failed to set session volume to 20%%\r\n");
+            }
+            else {
+                wprintf(L"Set session volume to 20%%\r\n");
+            }
+        }
+        else {
+            // Priority session is inactive, so set session back to 100%
+            isPrioritySessionActive = false;
+
+            if (FAILED(spSessionVolume->SetMasterVolume(1.0f, nullptr))) {
+                fwprintf(stderr, L"Failed to set session volume to 100%%\r\n");
+            }
+            else {
+                wprintf(L"Set session volume to 100%%\r\n");
+            }
+        }
+    };
+    
+    return MonitorPeakMeterValueAndPerformActionUntilEnterIsPressed(pPriorityProcessSessionControl, 500,
+        dimSessionWhenPrioritySessionMakesNoiseCallbackFn);
 }
 
 HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2 *pSession,
