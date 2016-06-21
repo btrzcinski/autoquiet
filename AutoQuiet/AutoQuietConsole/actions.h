@@ -134,7 +134,7 @@ HRESULT PrintPeakMeterValueOnInterval(IAudioSessionControl2 *pSession, UINT peri
 }
 
 HRESULT LowerSessionVolumeWhenPrioritySessionMakesNoise(IAudioSessionControl2 *pProcessSessionControl,
-    IAudioSessionControl2 *pPriorityProcessSessionControl)
+    IAudioSessionControl2 *pPriorityProcessSessionControl, float loweredVolumeLevel)
 {
     auto hr = S_OK;
 
@@ -145,7 +145,7 @@ HRESULT LowerSessionVolumeWhenPrioritySessionMakesNoise(IAudioSessionControl2 *p
     }
 
     auto dimSessionWhenPrioritySessionMakesNoiseCallbackFn =
-        [spSessionVolume](float newPrioritySessionPeakMeterValue)
+        [spSessionVolume, loweredVolumeLevel](float newPrioritySessionPeakMeterValue)
     {
         static bool isPrioritySessionActive = false;
 
@@ -155,14 +155,14 @@ HRESULT LowerSessionVolumeWhenPrioritySessionMakesNoise(IAudioSessionControl2 *p
                 return;
             }
             
-            // Priority session is active, so dim session to 20%
+            // Priority session is active, so dim session to loweredVolumeLevel
             isPrioritySessionActive = true;
 
-            if (FAILED(spSessionVolume->SetMasterVolume(0.2f, nullptr))) {
-                fwprintf(stderr, L"Failed to set session volume to 20%%\r\n");
+            if (FAILED(spSessionVolume->SetMasterVolume(loweredVolumeLevel, nullptr))) {
+                fwprintf(stderr, L"Failed to set session volume to %2.0f%%\r\n", loweredVolumeLevel * 100.0f);
             }
             else {
-                wprintf(L"Set session volume to 20%%\r\n");
+                wprintf(L"Set session volume to %2.0f%%\r\n", loweredVolumeLevel * 100.0f);
             }
         }
         else {
@@ -183,7 +183,7 @@ HRESULT LowerSessionVolumeWhenPrioritySessionMakesNoise(IAudioSessionControl2 *p
 }
 
 HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2 *pSession,
-    IAudioSessionControl2* pPrioritySession)
+    IAudioSessionControl2* pPrioritySession, float loweredVolumeLevel)
 {
     auto hr = S_OK;
 
@@ -196,15 +196,15 @@ HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2
     }
 
     auto dimSessionWhenPrioritySessionIsActiveCallbackFn =
-        [spSessionVolume](AudioSessionState newState)
+        [spSessionVolume, loweredVolumeLevel](AudioSessionState newState)
     {
         if (newState == AudioSessionStateActive) {
-            // Priority session is active, so dim session to 20%
-            if (FAILED(spSessionVolume->SetMasterVolume(0.2f, nullptr))) {
-                fwprintf(stderr, L"Failed to set session volume to 20%%\r\n");
+            // Priority session is active, so dim session to loweredVolumeLevel
+            if (FAILED(spSessionVolume->SetMasterVolume(loweredVolumeLevel, nullptr))) {
+                fwprintf(stderr, L"Failed to set session volume to %2.0f%%\r\n", loweredVolumeLevel * 100.0f);
             }
             else {
-                wprintf(L"Set session volume to 20%%\r\n");
+                wprintf(L"Set session volume to %2.0f%%\r\n", loweredVolumeLevel * 100.0f);
             }
         }
         else if (newState == AudioSessionStateInactive) {

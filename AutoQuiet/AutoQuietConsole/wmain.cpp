@@ -4,8 +4,10 @@
 
 int wmain(int argc, wchar_t *argv[])
 {
-    if (argc != 3) {
-        fwprintf(stderr, L"Usage: %ls [process-to-dim.exe] [priority-process-to-monitor.exe]", argv[0]);
+    if (argc < 3) {
+        fwprintf(stderr, L"Usage: %ls process-to-dim.exe priority-process-to-monitor.exe [level-to-lower-volume-to]\r\n", argv[0]);
+        fwprintf(stderr, L"The level to lower the volume to when the priority process makes noise defaults to 10%% if not specified.\r\n");
+        fwprintf(stderr, L"Example: %ls chrome.exe firefox.exe 10\r\n", argv[0]);
         return 1;
     }
 
@@ -16,7 +18,12 @@ int wmain(int argc, wchar_t *argv[])
         return 2;
     }
 
-    hr = MainRoutine(argv[1], argv[2]);
+    auto loweredVolume = 0.1f;
+    if (argc >= 4) {
+        loweredVolume = _wtoi(argv[3]) * 0.01f;
+    }
+
+    hr = MainRoutine(argv[1], argv[2], loweredVolume);
 
     CoUninitialize();
 

@@ -5,7 +5,7 @@
 #include "actions.h"
 
 // Assumes COM has been initialized.
-HRESULT MainRoutine(const wchar_t *processName, const wchar_t *priorityProcessName)
+HRESULT MainRoutine(const wchar_t *processName, const wchar_t *priorityProcessName, float loweredVolume)
 {
     auto hr = S_OK;
 
@@ -56,7 +56,9 @@ HRESULT MainRoutine(const wchar_t *processName, const wchar_t *priorityProcessNa
         return hr;
     }
 
-    hr = LowerSessionVolumeWhenPrioritySessionMakesNoise(spProcessSessionControl, spPriorityProcessSessionControl);
+    wprintf(L"Target volume when %ls makes noise: %2.0f%%\r\n", priorityProcessName, loweredVolume * 100.0f);
+
+    hr = LowerSessionVolumeWhenPrioritySessionMakesNoise(spProcessSessionControl, spPriorityProcessSessionControl, loweredVolume);
 
     return hr;
 }
