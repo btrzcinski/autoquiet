@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AutoQuietLib;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -52,25 +53,38 @@ namespace AutoQuietConsole2
             }
         }
 
+        private static AudioSession GetFirstAudioSessionForProcessName(string processName)
+        {
+            var processCandidates = Process.GetProcessesByName(processName);
+            if (processCandidates.Length == 0)
+            {
+                throw new Exception($"{processName} is not running; try starting it first.");
+            }
+
+            AudioSession processAudioSession = null;
+            foreach (var candidate in processCandidates)
+            {
+                if (AudioSession.TryGetFirstAudioSessionForProcess(candidate.Id, out processAudioSession))
+                {
+                    break;
+                }
+            }
+
+            if (processAudioSession == null)
+            {
+                throw new Exception($"Can't find audio session for {processName}; try playing audio first.");
+            }
+
+            return processAudioSession;
+        }
+
         private static void LowerProcessVolumeWhenPriorityProcessMakesNoise(string processToDimName, string priorityProcessName, float loweredVolume)
         {
-            var process = Process.GetProcessesByName(processToDimName).FirstOrDefault();
-            if (process == null)
-            {
-                throw new ArgumentException($"{processToDimName} is not running; try starting it first.");
-            }
+            var processToDimSession = GetFirstAudioSessionForProcessName(processToDimName);
+            var priorityProcessSession = GetFirstAudioSessionForProcessName(priorityProcessName);
 
-            Console.WriteLine($"{process.ProcessName} PID: {process.Id}");
-
-            var priorityProcess = Process.GetProcessesByName(priorityProcessName).FirstOrDefault();
-            if (priorityProcess == null)
-            {
-                throw new ArgumentException($"{priorityProcessName} is not running; try starting it first.");
-            }
-
-            Console.WriteLine($"{priorityProcess.ProcessName} PID: {priorityProcess.Id}");
-
-
+            Console.WriteLine($"{processToDimName} PID = {processToDimSession.ProcessId}");
+            Console.WriteLine($"{priorityProcessName} PID = {priorityProcessSession.ProcessId}");
         }
     }
 }

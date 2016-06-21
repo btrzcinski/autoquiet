@@ -1,8 +1,8 @@
 #pragma once
 
-#include <process.h>
-#include <audiosessionenumeration.h>
-#include <actions.h>
+#include "process.h"
+#include "audiosessionenumeration.h"
+#include "actions.h"
 
 // Assumes COM has been initialized.
 HRESULT MainRoutine(const wchar_t *processName, const wchar_t *priorityProcessName, float loweredVolume)

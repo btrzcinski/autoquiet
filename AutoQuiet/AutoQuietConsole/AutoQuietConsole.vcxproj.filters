@@ -27,19 +27,19 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\actions.h">
+    <ClInclude Include="actions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\AudioSessionEventsSink.h">
+    <ClInclude Include="audiosessionenumeration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\errormacros.h">
+    <ClInclude Include="AudioSessionEventsSink.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\process.h">
+    <ClInclude Include="errormacros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\audiosessionenumeration.h">
+    <ClInclude Include="process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

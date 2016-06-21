@@ -6,8 +6,14 @@ namespace AutoQuietLib
     {
     public:
         static AudioSession^ GetFirstAudioSessionForProcess(int processId);
+        static bool TryGetFirstAudioSessionForProcess(int processId, [System::Runtime::InteropServices::Out] AudioSession^% audioSession);
 
         virtual ~AudioSession();
+
+        property int ProcessId
+        {
+            int get();
+        }
 
     private:
         AudioSession(IAudioSessionControl2 *pSession);

@@ -136,12 +136,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\actions.h" />
-    <ClInclude Include="..\include\audiosession.h" />
-    <ClInclude Include="..\include\AudioSessionEventsSink.h" />
-    <ClInclude Include="..\include\errormacros.h" />
-    <ClInclude Include="..\include\process.h" />
+    <ClInclude Include="actions.h" />
     <ClInclude Include="AudioSession.h" />
+    <ClInclude Include="audiosessionenumeration.h" />
+    <ClInclude Include="AudioSessionEventsSink.h" />
+    <ClInclude Include="errormacros.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="targetver.h" />
