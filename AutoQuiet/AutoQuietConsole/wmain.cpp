@@ -10,7 +10,7 @@ int wmain(int argc, wchar_t *argv[])
         fwprintf(stderr, L"Example: %ls chrome.exe firefox.exe 10\r\n", argv[0]);
         return 1;
     }
-
+    
     auto hr = S_OK;
 
     if (FAILED(hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
