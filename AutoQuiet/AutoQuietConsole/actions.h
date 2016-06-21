@@ -2,8 +2,8 @@
 
 #include "AudioSessionEventsSink.h"
 
-// Period is expressed in milliseconds
-HRESULT PrintPeakMeterValueOnInterval(IAudioSessionControl2 *pSession, UINT period)
+HRESULT MonitorPeakMeterValueAndPerformActionUntilSignaled(IAudioSessionControl2 *pSession, UINT period,
+    std::function<void(float)> actionFn, HANDLE cancelHandle)
 {
     auto hr = S_OK;
 
@@ -30,27 +30,113 @@ HRESULT PrintPeakMeterValueOnInterval(IAudioSessionControl2 *pSession, UINT peri
         return hr;
     }
 
-    wprintf(L"Press Ctrl-C to exit.\r\n");
-
+    auto lastPeakValue = 0.0f, peakValue = 0.0f;
+    HANDLE waitHandles[2] = { timerHandle, cancelHandle };
     while (1)
     {
-        if (WaitForSingleObject(timerHandle, INFINITE) != WAIT_OBJECT_0) {
-            hr = HRESULT_FROM_WIN32(GetLastError());
-            fwprintf(stderr, L"WaitForSingleObject failed: %#010x\r\n", hr);
+        auto waitRet = WaitForMultipleObjects(2, waitHandles, FALSE, INFINITE);
+        if (waitRet != WAIT_OBJECT_0 && waitRet != (WAIT_OBJECT_0 + 1))
+        {
+            hr = E_FAIL;
+            fwprintf(stderr, L"WaitForMultipleObjects failed\r\n");
             break;
         }
 
-        auto peakValue = 0.0f;
+        // Check if we were cancelled
+        if (waitRet == (WAIT_OBJECT_0 + 1)) break;
+
         if (FAILED(hr = spMeterInformation->GetPeakValue(&peakValue))) {
             fwprintf(stderr, L"Failed to get peak value from meter information: %#010x\r\n", hr);
             break;
         }
 
-        wprintf(L"\rPeak value: %f", peakValue);
+        if (lastPeakValue == peakValue) continue;
+
+        lastPeakValue = peakValue;
+        actionFn(peakValue);
     }
-    wprintf(L"\r\n");
 
     CancelWaitableTimer(timerHandle);
+
+    return hr;
+}
+
+HRESULT MonitorPeakMeterValueAndPerformActionUntilEnterIsPressed(IAudioSessionControl2 *pSession, UINT period,
+    std::function<void(float)> actionFn)
+{
+    auto hr = S_OK;
+
+    auto cancelHandle = CHandle(CreateEventW(nullptr, TRUE, FALSE, nullptr));
+    if (cancelHandle == nullptr) {
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        fwprintf(stderr, L"Failed to create cancel handle for MonitorPeakMeterValueAndPerformActionUntilSignaled: %#010x\r\n", hr);
+        return hr;
+    }
+
+    struct ThreadParams {
+        IAudioSessionControl2 *pSession;
+        UINT period;
+        std::function<void(float)> actionFn;
+        HANDLE cancelHandle;
+    };
+
+    auto threadProc = [](LPVOID params) -> DWORD
+    {
+        auto threadParams = static_cast<ThreadParams*>(params);
+        return SUCCEEDED(MonitorPeakMeterValueAndPerformActionUntilSignaled(
+            threadParams->pSession,
+            threadParams->period,
+            threadParams->actionFn,
+            threadParams->cancelHandle));
+    };
+
+    ThreadParams params;
+    params.pSession = pSession;
+    params.period = 500;
+    params.actionFn = actionFn;
+    params.cancelHandle = cancelHandle;
+
+    auto threadHandle = CreateThread(nullptr, 0, threadProc, &params, 0, nullptr);
+    if (threadHandle == nullptr) {
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        fwprintf(stderr, L"Failed to create thread for MonitorPeakMeterValueAndPerformActionUntilSignaled: %#010x\r\n", hr);
+        return hr;
+    }
+
+    wprintf(L"Press Enter to exit.\r\n");
+    getchar();
+
+    // Cancel the operation and wait for the thread to exit.
+    if (0 == SetEvent(cancelHandle)) {
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        fwprintf(stderr, L"Failed to signal cancel handle for thread: %#010x\r\n", hr);
+        return hr;
+    }
+
+    if (WaitForSingleObject(threadHandle, INFINITE) != WAIT_OBJECT_0) {
+        fwprintf(stderr, L"Failed to wait for thread to terminate\r\n");
+        return E_FAIL;
+    }
+
+    wprintf(L"\r\n");
+
+    return hr;
+}
+
+// Period is expressed in milliseconds
+HRESULT PrintPeakMeterValueOnInterval(IAudioSessionControl2 *pSession, UINT period)
+{
+    auto peakValueChangedActionFn = [](float peakValue) {
+        wprintf(L"\rPeak value: %f", peakValue);
+    };
+
+    return MonitorPeakMeterValueAndPerformActionUntilEnterIsPressed(pSession, period, peakValueChangedActionFn);
+}
+
+HRESULT LowerSessionVolumeWhenPrioritySessionMakesNoise(IAudioSessionControl2 *pProcessSessionControl,
+    IAudioSessionControl2 *pPriorityProcessSessionControl)
+{
+    auto hr = S_OK;
 
     return hr;
 }
