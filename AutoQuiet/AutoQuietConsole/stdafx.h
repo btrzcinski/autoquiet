@@ -22,6 +22,7 @@
 #include <endpointvolume.h> // IAudioMeterInformation
 
 #include <cstdio>
+#include <functional>
 #include <memory>
 
 #include "errormacros.h"

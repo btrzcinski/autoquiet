@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-
 class AudioSessionEventsSinkWithStateCallback : public IAudioSessionEvents
 {
 public:
