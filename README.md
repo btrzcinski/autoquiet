@@ -6,7 +6,7 @@ This app will lower the volume of an app if another app starts playing audio.
 
 ## Can I try it?
 
-Try the [alpha release](https://github.com/btrzcinski/autoquiet/releases/tag/v0.2)!
+Try the [v0.2 release](https://github.com/btrzcinski/autoquiet/releases/tag/v0.2)!
 
 ## Usage
 
