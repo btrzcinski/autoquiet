@@ -2,11 +2,17 @@
 
 ## What does it do?
 
-This app will lower the volume of an app if another app starts playing audio. Right now, it specifically lowers the volume of Chrome if Firefox starts playing audio.
+This app will lower the volume of an app if another app starts playing audio.
 
 ## Can I try it?
 
-Try the [alpha release](https://github.com/btrzcinski/autoquiet/releases/tag/v0.1)!
+Try the [alpha release](https://github.com/btrzcinski/autoquiet/releases/tag/v0.2)!
+
+## Usage
+
+Usage: `AutoQuietConsole.exe process-to-dim.exe priority-process-to-monitor.exe [level-to-lower-volume-to]`
+The level to lower the volume to when the priority process makes noise defaults to 10% if not specified.
+Example: `AutoQuietConsole.exe chrome.exe firefox.exe 10`
 
 ## Requirements
 
