@@ -20,7 +20,7 @@ HRESULT MainRoutine(const wchar_t *processName, const wchar_t *priorityProcessNa
         return hr;
     }
 
-    printf("%ls PID: %d\r\n", processName, processPid);
+    wprintf(L"%ls PID: %d\r\n", processName, processPid);
 
     if (FAILED(hr = GetProcessIdForProcessName(priorityProcessName, &priorityProcessPid))) {
         fwprintf(stderr, L"Failed to get %ls PID: %#010x\r\n", priorityProcessName, hr);
