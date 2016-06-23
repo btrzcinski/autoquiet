@@ -9,7 +9,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoQuietConsole2", "AutoQu
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AutoQuietLib", "AutoQuietLib\AutoQuietLib.vcxproj", "{4AFBF427-8472-4021-8B3F-C1B294620F39}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AutoQuiet.Shared", "AutoQuiet.Shared\AutoQuiet.Shared.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		AutoQuiet.Shared\AutoQuiet.Shared.vcxitems*{b268fecf-91d5-486d-ae27-82f732ac1883}*SharedItemsImports = 4
+		AutoQuiet.Shared\AutoQuiet.Shared.vcxitems*{4afbf427-8472-4021-8b3f-c1b294620f39}*SharedItemsImports = 4
+		AutoQuiet.Shared\AutoQuiet.Shared.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86

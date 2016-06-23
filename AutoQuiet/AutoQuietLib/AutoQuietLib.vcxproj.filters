@@ -27,18 +27,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="actions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="audiosessionenumeration.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioSessionEventsSink.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="errormacros.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp">

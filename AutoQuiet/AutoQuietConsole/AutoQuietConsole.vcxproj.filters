@@ -27,18 +27,6 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="actions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="audiosessionenumeration.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioSessionEventsSink.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="errormacros.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
