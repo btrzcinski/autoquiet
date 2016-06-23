@@ -64,7 +64,7 @@ namespace AutoQuietConsole2
             AudioSession processAudioSession = null;
             foreach (var candidate in processCandidates)
             {
-                if (AudioSession.TryGetFirstAudioSessionForProcess(candidate.Id, out processAudioSession))
+                if (AudioSession.TryGetFirstAudioSessionForProcess(candidate, out processAudioSession))
                 {
                     break;
                 }

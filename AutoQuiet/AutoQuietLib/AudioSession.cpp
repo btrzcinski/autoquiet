@@ -5,29 +5,29 @@ using namespace AutoQuietLib;
 
 #include "audiosessionenumeration.h"
 
-AudioSession^ AudioSession::GetFirstAudioSessionForProcess(int processId)
+AudioSession^ AudioSession::GetFirstAudioSessionForProcess(System::Diagnostics::Process^ process)
 {
     CComPtr<IAudioSessionControl2> spSession;
     
     auto hr = S_OK;
-    if (FAILED(hr = GetAudioSessionForProcessId(processId, &spSession))) {
-        auto exceptionMsg = System::String::Format(L"Error getting audio session for PID = {0}: 0x{1:X8}", processId, hr);
+    if (FAILED(hr = GetAudioSessionForProcessId(process->Id, &spSession))) {
+        auto exceptionMsg = System::String::Format(L"Error getting audio session for PID = {0}: 0x{1:X8}", process->Id, hr);
         throw gcnew System::Exception(exceptionMsg);
     }
 
     if (spSession == nullptr) {
-        auto exceptionMsg = System::String::Format(L"No audio sessions open for PID = {0}: try playing audio first", processId);
+        auto exceptionMsg = System::String::Format(L"No audio sessions open for PID = {0}: try playing audio first", process->Id);
         throw gcnew System::Exception(exceptionMsg);
     }
 
     return gcnew AudioSession(spSession);
 }
 
-bool AudioSession::TryGetFirstAudioSessionForProcess(int processId, AudioSession ^% audioSession)
+bool AudioSession::TryGetFirstAudioSessionForProcess(System::Diagnostics::Process^ process, AudioSession ^% audioSession)
 {
     try
     {
-        audioSession = GetFirstAudioSessionForProcess(processId);
+        audioSession = GetFirstAudioSessionForProcess(process);
     }
     catch (System::Exception^)
     {
