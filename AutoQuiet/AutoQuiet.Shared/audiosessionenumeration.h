@@ -1,8 +1,8 @@
 #pragma once
 
-HRESULT GetAudioSessionEnumerator(IAudioSessionEnumerator **ppSessionEnumerator)
+HRESULT GetAudioSessionManager(IAudioSessionManager2 **ppSessionManager)
 {
-    if (ppSessionEnumerator == nullptr) return E_POINTER;
+    if (ppSessionManager == nullptr) return E_POINTER;
 
     CComPtr<IMMDeviceEnumerator> spEnumerator;
     IF_FAIL_RET_HR(spEnumerator.CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL));
@@ -12,6 +12,16 @@ HRESULT GetAudioSessionEnumerator(IAudioSessionEnumerator **ppSessionEnumerator)
 
     CComPtr<IAudioSessionManager2> spSessionManager;
     IF_FAIL_RET_HR(spDefaultDevice->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, nullptr, (void**)&spSessionManager));
+
+    return S_OK;
+}
+
+HRESULT GetAudioSessionEnumerator(IAudioSessionEnumerator **ppSessionEnumerator)
+{
+    if (ppSessionEnumerator == nullptr) return E_POINTER;
+
+    CComPtr<IAudioSessionManager2> spSessionManager;
+    IF_FAIL_RET_HR(GetAudioSessionManager(&spSessionManager));
 
     IF_FAIL_RET_HR(spSessionManager->GetSessionEnumerator(ppSessionEnumerator));
 

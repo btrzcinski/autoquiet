@@ -219,7 +219,7 @@ HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2
     };
 
     CComPtr<IAudioSessionEvents> spPrioritySessionEventSink;
-    if (FAILED(hr = AudioSessionEventsSinkWithStateCallback::Create(&spPrioritySessionEventSink,
+    if (FAILED(hr = AudioSessionEventsSink::Create(&spPrioritySessionEventSink,
         dimSessionWhenPrioritySessionIsActiveCallbackFn))) {
         fwprintf(stderr, L"Failed to create new audio session events sink for priority session: %#010x\r\n", hr);
         return hr;

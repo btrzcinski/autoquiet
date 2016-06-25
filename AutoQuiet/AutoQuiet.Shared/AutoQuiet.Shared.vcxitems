@@ -17,6 +17,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)actions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)audiosessionenumeration.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)AudioSessionEventsSink.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)AudioSessionNotificationSink.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ComRefCntBase.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)errormacros.h" />
   </ItemGroup>
 </Project>

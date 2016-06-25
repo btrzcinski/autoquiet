@@ -1,16 +1,16 @@
 #pragma once
 
-class AudioSessionEventsSinkWithStateCallback : public IAudioSessionEvents
+#include "ComRefCntBase.h"
+
+class AudioSessionEventsSink : public ComRefCntBase<IAudioSessionEvents>
 {
 public:
     using StateCallback = std::function<void(AudioSessionState)>;
 
 private:
-    LONG m_refCount;
     StateCallback stateCallback;
 
-    AudioSessionEventsSinkWithStateCallback(StateCallback const& stateCallback)
-        : m_refCount(1)
+    AudioSessionEventsSink(StateCallback const& stateCallback)
     {
         this->stateCallback = stateCallback;
     }
@@ -20,38 +20,8 @@ public:
     {
         if (ppNewSink == nullptr) return E_POINTER;
 
-        *ppNewSink = static_cast<IAudioSessionEvents*>(new AudioSessionEventsSinkWithStateCallback(stateCallback));
+        *ppNewSink = static_cast<IAudioSessionEvents*>(new AudioSessionEventsSink(stateCallback));
         return S_OK;
-    }
-
-    // Inherited via IUnknown
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject) override
-    {
-        if (ppvObject == nullptr) return E_POINTER;
-
-        if (riid == __uuidof(IUnknown)) {
-            AddRef();
-            *ppvObject = static_cast<IUnknown*>(this);
-        }
-        else if (riid == __uuidof(IAudioSessionEvents)) {
-            AddRef();
-            *ppvObject = static_cast<IAudioSessionEvents*>(this);
-        }
-
-        *ppvObject = nullptr;
-        return E_NOINTERFACE;
-    }
-    virtual ULONG STDMETHODCALLTYPE AddRef(void) override
-    {
-        return InterlockedIncrement(&m_refCount);
-    }
-    virtual ULONG STDMETHODCALLTYPE Release(void) override
-    {
-        auto newRefCount = InterlockedDecrement(&m_refCount);
-        if (newRefCount == 0) {
-            delete this;
-        }
-        return newRefCount;
     }
 
     // Inherited via IAudioSessionEvents
@@ -59,24 +29,29 @@ public:
     {
         return S_OK;
     }
+
     virtual HRESULT STDMETHODCALLTYPE OnIconPathChanged(LPCWSTR NewIconPath, LPCGUID EventContext) override
     {
         return S_OK;
     }
+
     virtual HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float NewVolume, BOOL NewMute, LPCGUID EventContext) override
     {
         wprintf(L"New volume: %f, new mute: %s\r\n", NewVolume, (NewMute ? L"true" : L"false"));
 
         return S_OK;
     }
+
     virtual HRESULT STDMETHODCALLTYPE OnChannelVolumeChanged(DWORD ChannelCount, float NewChannelVolumeArray[], DWORD ChangedChannel, LPCGUID EventContext) override
     {
         return S_OK;
     }
+
     virtual HRESULT STDMETHODCALLTYPE OnGroupingParamChanged(LPCGUID NewGroupingParam, LPCGUID EventContext) override
     {
         return S_OK;
     }
+
     virtual HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState NewState) override
     {
         wchar_t *newStateStr = nullptr;
@@ -99,6 +74,7 @@ public:
 
         return S_OK;
     }
+
     virtual HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason DisconnectReason) override
     {
         return S_OK;

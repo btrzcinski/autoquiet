@@ -1,5 +1,8 @@
 #include "Stdafx.h"
 
+#include "AudioSession.h"
+#include "ProcessAudioWatcher.h"
+
 #pragma unmanaged
 BOOL WINAPI DllMain(
     _In_ HINSTANCE hinstDLL,
