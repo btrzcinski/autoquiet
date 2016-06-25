@@ -34,6 +34,14 @@ namespace AutoQuietLib
             m_disposed = true;
         }
 
+        property System::String^ ProcessName
+        {
+            System::String^ get()
+            {
+                return this->m_processName;
+            }
+        }
+
         property System::Collections::ObjectModel::ReadOnlyObservableCollection<AudioSession^>^ SessionList
         {
             System::Collections::ObjectModel::ReadOnlyObservableCollection<AudioSession^>^ get()

@@ -2,6 +2,7 @@
 
 #include "AudioSession.h"
 #include "ProcessAudioWatcher.h"
+#include "ProcessAudioWatcherExtensions.h"
 
 #pragma unmanaged
 BOOL WINAPI DllMain(

@@ -20,6 +20,63 @@ namespace AutoQuietLib
         SessionDisconnected = (SessionLogoff + 1),
         ExclusiveModeOverride = (SessionDisconnected + 1)
     };
+
+    ref class AudioSessionEnumExtensions abstract sealed
+    {
+    public:
+        static AudioSessionState ConvertNativeAudioSessionStateToManaged(::AudioSessionState state)
+        {
+            AudioSessionState managedEnum = AudioSessionState::Inactive;
+
+            switch (state)
+            {
+            case ::AudioSessionStateInactive:
+                managedEnum = AudioSessionState::Inactive;
+                break;
+            case ::AudioSessionStateActive:
+                managedEnum = AudioSessionState::Active;
+                break;
+            case ::AudioSessionStateExpired:
+                managedEnum = AudioSessionState::Expired;
+                break;
+            default:
+                _ASSERT(false);
+            }
+
+            return managedEnum;
+        }
+
+        static AudioSessionDisconnectReason ConvertNativeAudioSessionDisconnectReasonToManaged(::AudioSessionDisconnectReason reason)
+        {
+            auto managedEnum = AudioSessionDisconnectReason::DeviceRemoval;
+
+            switch (reason)
+            {
+            case ::DisconnectReasonDeviceRemoval:
+                managedEnum = AudioSessionDisconnectReason::DeviceRemoval;
+                break;
+            case ::DisconnectReasonServerShutdown:
+                managedEnum = AudioSessionDisconnectReason::ServerShutdown;
+                break;
+            case ::DisconnectReasonFormatChanged:
+                managedEnum = AudioSessionDisconnectReason::FormatChanged;
+                break;
+            case ::DisconnectReasonSessionLogoff:
+                managedEnum = AudioSessionDisconnectReason::SessionLogoff;
+                break;
+            case ::DisconnectReasonSessionDisconnected:
+                managedEnum = AudioSessionDisconnectReason::SessionDisconnected;
+                break;
+            case ::DisconnectReasonExclusiveModeOverride:
+                managedEnum = AudioSessionDisconnectReason::ExclusiveModeOverride;
+                break;
+            default:
+                _ASSERT(false);
+            }
+
+            return managedEnum;
+        }
+    };
     
     delegate void AudioSessionCreatedEventHandler(AudioSession^ newSession);
 

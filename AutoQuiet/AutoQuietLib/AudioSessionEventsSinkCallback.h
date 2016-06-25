@@ -49,22 +49,7 @@ namespace AutoQuietLib
 
         void OnStateChanged(::AudioSessionState newState)
         {
-            AudioSessionState managedEnum = AudioSessionState::Inactive;
-
-            switch (newState)
-            {
-            case ::AudioSessionStateInactive:
-                managedEnum = AudioSessionState::Inactive;
-                break;
-            case ::AudioSessionStateActive:
-                managedEnum = AudioSessionState::Active;
-                break;
-            case ::AudioSessionStateExpired:
-                managedEnum = AudioSessionState::Expired;
-                break;
-            default:
-                _ASSERT(false);
-            }
+            auto managedEnum = AudioSessionEnumExtensions::ConvertNativeAudioSessionStateToManaged(newState);
 
             try
             {
@@ -83,31 +68,7 @@ namespace AutoQuietLib
 
         void OnDisconnected(::AudioSessionDisconnectReason reason)
         {
-            AudioSessionDisconnectReason managedEnum = AudioSessionDisconnectReason::DeviceRemoval;
-
-            switch (reason)
-            {
-            case ::DisconnectReasonDeviceRemoval:
-                managedEnum = AudioSessionDisconnectReason::DeviceRemoval;
-                break;
-            case ::DisconnectReasonServerShutdown:
-                managedEnum = AudioSessionDisconnectReason::ServerShutdown;
-                break;
-            case ::DisconnectReasonFormatChanged:
-                managedEnum = AudioSessionDisconnectReason::FormatChanged;
-                break;
-            case ::DisconnectReasonSessionLogoff:
-                managedEnum = AudioSessionDisconnectReason::SessionLogoff;
-                break;
-            case ::DisconnectReasonSessionDisconnected:
-                managedEnum = AudioSessionDisconnectReason::SessionDisconnected;
-                break;
-            case ::DisconnectReasonExclusiveModeOverride:
-                managedEnum = AudioSessionDisconnectReason::ExclusiveModeOverride;
-                break;
-            default:
-                _ASSERT(false);
-            }
+            auto managedEnum = AudioSessionEnumExtensions::ConvertNativeAudioSessionDisconnectReasonToManaged(reason);
 
             try
             {

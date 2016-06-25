@@ -1,6 +1,8 @@
 ﻿using AutoQuietLib;
+using AutoQuietLib.Extensions;
 using System;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -22,7 +24,7 @@ namespace AutoQuietConsole2
 
             var processToDim = args[0];
             var priorityProcess = args[1];
-            var loweredVolume = 0.1f;
+            loweredVolume = 0.1f;
             if (args.Length > 2)
             {
                 try
@@ -42,21 +44,29 @@ namespace AutoQuietConsole2
 
             try
             {
-                using (var watcher = new ProcessAudioWatcher(processToDim))
+                using (processToDimWatcher = new ProcessAudioWatcher(processToDim))
                 {
-                    Console.WriteLine($"Watching process: {processToDim}");
-                    foreach (var existingSession in watcher.SessionList)
+                    Console.WriteLine($"Watching process to dim: {processToDim}");
+                    using (priorityProcessWatcher = new ProcessAudioWatcher(priorityProcess))
                     {
-                        Console.WriteLine("Existing session: PID = {0}, {1}", existingSession.Process.Id, existingSession.Process.ProcessName);
-                        existingSession.StateChanged += Session_StateChanged;
-                        existingSession.Disconnected += Session_Disconnected;
+                        Console.WriteLine($"Watching priority process: {priorityProcess}");
+                        foreach (var existingSession in priorityProcessWatcher.SessionList)
+                        {
+                            existingSession.StateChanged += PriorityProcessSession_StateChanged;
+                            existingSession.Disconnected += PriorityProcessSession_Disconnected;
+                        }                        
+
+                        var c = (INotifyCollectionChanged)priorityProcessWatcher.SessionList;
+                        c.CollectionChanged += SessionListChanged;
+
+                        // If an existing session is already playing, dim our process
+                        RecalculateProcessDimState(processToDimWatcher, priorityProcessWatcher);
+
+                        Console.WriteLine("Press a key to stop.");
+                        Console.ReadKey(true);
+
+                        processToDimWatcher.SetAllSessionsToVolume(1.0f);
                     }
-
-                    var c = (INotifyCollectionChanged)watcher.SessionList;
-                    c.CollectionChanged += SessionListChanged;
-
-                    Console.WriteLine("Press a key to stop.");
-                    Console.ReadKey(true);
                 }
             }
             catch (Exception ex)
@@ -65,14 +75,30 @@ namespace AutoQuietConsole2
             }
         }
 
-        private static void Session_Disconnected(AudioSession sender, AudioSessionDisconnectReason reason)
+        private static float loweredVolume = 0.1f;
+        private static ProcessAudioWatcher priorityProcessWatcher = null;
+        private static ProcessAudioWatcher processToDimWatcher = null;
+
+        private static void RecalculateProcessDimState(ProcessAudioWatcher process, ProcessAudioWatcher priorityProcess)
         {
-            Console.WriteLine("Session disconnected ({0}): PID = {1}, {2}", reason, sender.Process.Id, sender.Process.ProcessName);
+            if (priorityProcess.SessionList.Any(s => s.State == AudioSessionState.Active))
+            {
+                process.SetAllSessionsToVolume(loweredVolume);
+            }
+            else
+            {
+                process.SetAllSessionsToVolume(1.0f);
+            }
         }
 
-        private static void Session_StateChanged(AudioSession sender, AudioSessionState state)
+        private static void PriorityProcessSession_Disconnected(AudioSession sender, AudioSessionDisconnectReason reason)
         {
-            Console.WriteLine("Session state changed ({0}): PID = {1}, {2}", state, sender.Process.Id, sender.Process.ProcessName);
+            RecalculateProcessDimState(processToDimWatcher, priorityProcessWatcher);
+        }
+
+        private static void PriorityProcessSession_StateChanged(AudioSession sender, AudioSessionState state)
+        {
+            RecalculateProcessDimState(processToDimWatcher, priorityProcessWatcher);
         }
 
         private static void SessionListChanged(object sender, NotifyCollectionChangedEventArgs args)
@@ -81,20 +107,24 @@ namespace AutoQuietConsole2
             {
                 foreach (var newSession in args.NewItems.Cast<AudioSession>())
                 {
-                    Console.WriteLine("New session: PID = {0}, {1}", newSession.Process.Id, newSession.Process.ProcessName);
-                    newSession.Disconnected += Session_Disconnected;
-                    newSession.StateChanged += Session_StateChanged;
+                    newSession.Disconnected += PriorityProcessSession_Disconnected;
+                    newSession.StateChanged += PriorityProcessSession_StateChanged;
                 }
             }
             else if (args.Action == NotifyCollectionChangedAction.Remove)
             {
                 foreach (var oldSession in args.OldItems.Cast<AudioSession>())
                 {
-                    Console.WriteLine("Removed session: PID = {0}, {1}", oldSession.Process.Id, oldSession.Process.ProcessName);
-                    oldSession.Disconnected -= Session_Disconnected;
-                    oldSession.StateChanged -= Session_StateChanged;
+                    oldSession.Disconnected -= PriorityProcessSession_Disconnected;
+                    oldSession.StateChanged -= PriorityProcessSession_StateChanged;
                 }
             }
+            else
+            {
+                Debug.Assert(false);
+            }
+
+            RecalculateProcessDimState(processToDimWatcher, priorityProcessWatcher);
         }
     }
 }

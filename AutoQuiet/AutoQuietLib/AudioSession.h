@@ -59,6 +59,41 @@ namespace AutoQuietLib
             }
         }
 
+        property AudioSessionState State
+        {
+            AudioSessionState get()
+            {
+                ::AudioSessionState state;
+                if (FAILED(this->pSession->GetState(&state)))
+                {
+                    throw gcnew System::Exception(L"Failed to get state from IAudioSessionControl2");
+                }
+
+                return AudioSessionEnumExtensions::ConvertNativeAudioSessionStateToManaged(state);
+            }
+        }
+
+        property float MasterVolume
+        {
+            float get()
+            {
+                float volume;
+                if (FAILED(this->pVolume->GetMasterVolume(&volume)))
+                {
+                    throw gcnew System::Exception(L"Failed to get master volume from ISimpleAudioVolume");
+                }
+
+                return volume;
+            }
+            void set(float value)
+            {
+                if (FAILED(this->pVolume->SetMasterVolume(value, nullptr)))
+                {
+                    throw gcnew System::Exception(L"Failed to set master volume on ISimpleAudioVolume");
+                }
+            }
+        }
+
         event AudioSessionStateChangedEventHandler^ StateChanged;
 
         event AudioSessionDisconnectedEventHandler^ Disconnected;
@@ -66,14 +101,7 @@ namespace AutoQuietLib
     internal:
         AudioSession(IAudioSessionControl2 *pSession)
         {
-            if (pSession == nullptr)
-            {
-                throw gcnew System::ArgumentNullException(L"pSession");
-            }
-
-            this->pSession = pSession;
-            this->pSession->AddRef();
-
+            InitializeSessionObjects(pSession);
             InitializeProcessObject();
             RegisterForEvents();
         }
@@ -96,7 +124,23 @@ namespace AutoQuietLib
         System::Diagnostics::Process^ m_process;
 
         IAudioSessionControl2 *pSession = nullptr;
+        ISimpleAudioVolume *pVolume = nullptr;
         AudioSessionEventsSinkCallback *pEventsSinkCallback = nullptr;
+
+        void InitializeSessionObjects(IAudioSessionControl2* pSession)
+        {
+            if (pSession == nullptr)
+            {
+                throw gcnew System::ArgumentNullException(L"pSession");
+            }
+
+            this->pSession = pSession;
+            this->pSession->AddRef();
+
+            ISimpleAudioVolume *pVolume;
+            IF_FAIL_THROW(this->pSession->QueryInterface(IID_PPV_ARGS(&pVolume)));
+            this->pVolume = pVolume;
+        }
 
         void InitializeProcessObject()
         {
