@@ -54,17 +54,11 @@ namespace AutoQuietLib
             m_disposed = true;
         }
 
-        property int ProcessId
+        property System::Diagnostics::Process^ Process
         {
-            int get()
+            System::Diagnostics::Process^ get()
             {
-                DWORD processId;
-                if (FAILED(this->pSession->GetProcessId(&processId)))
-                {
-                    throw gcnew System::Exception(L"Failed to get process ID from underlying IAudioSessionControl2");
-                }
-
-                return processId;
+                return this->m_process;
             }
         }
 
@@ -107,6 +101,7 @@ namespace AutoQuietLib
             this->pSession = pSession;
             this->pSession->AddRef();
 
+            InitializeProcessObject();
             RegisterForEvents();
         }
 
@@ -125,8 +120,21 @@ namespace AutoQuietLib
 
     private:
         bool m_disposed = false;
+        System::Diagnostics::Process^ m_process;
+
         IAudioSessionControl2 *pSession = nullptr;
         AudioSessionEventsSinkCallback *pEventsSinkCallback = nullptr;
+
+        void InitializeProcessObject()
+        {
+            DWORD processId;
+            if (FAILED(this->pSession->GetProcessId(&processId)))
+            {
+                throw gcnew System::Exception(L"Failed to get process ID from underlying IAudioSessionControl2");
+            }
+
+            this->m_process = System::Diagnostics::Process::GetProcessById(processId);
+        }
 
         void RegisterForEvents()
         {
@@ -149,12 +157,12 @@ namespace AutoQuietLib
 
         void OnNewSessionState(AudioSessionState state)
         {
-            System::Console::WriteLine(L"Session state changed to {0}: PID = {1}, {2}", state.ToString(), this->ProcessId, this->SessionIdentifier);
+            System::Console::WriteLine(L"Session state changed to {0}: PID = {1}, {2}", state.ToString(), this->Process->Id, this->SessionIdentifier);
         }
 
         void OnDisconnected(AudioSessionDisconnectReason reason)
         {
-            System::Console::WriteLine(L"Session disconnected ({0}): PID = {1}, {2}", reason.ToString(), this->ProcessId, this->SessionIdentifier);
+            System::Console::WriteLine(L"Session disconnected ({0}): PID = {1}, {2}", reason.ToString(), this->Process->Id, this->SessionIdentifier);
         }
     };
 }

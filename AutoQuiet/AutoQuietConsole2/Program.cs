@@ -47,7 +47,7 @@ namespace AutoQuietConsole2
                 {
                     foreach (var existingSession in watcher.SessionList)
                     {
-                        Console.WriteLine("Existing session: PID = {0}, {1}", existingSession.ProcessId, existingSession.SessionIdentifier);
+                        Console.WriteLine("Existing session: PID = {0}, {1}", existingSession.Process.Id, existingSession.Process.ProcessName);
                     }
 
                     var c = (INotifyCollectionChanged)watcher.SessionList;
@@ -71,14 +71,14 @@ namespace AutoQuietConsole2
             {
                 foreach (var newSession in args.NewItems.Cast<AudioSession>())
                 {
-                    Console.WriteLine("New session: PID = {0}, {1}", newSession.ProcessId, newSession.SessionIdentifier);
+                    Console.WriteLine("New session: PID = {0}, {1}", newSession.Process.Id, newSession.Process.ProcessName);
                 }
             }
             else if (args.Action == NotifyCollectionChangedAction.Remove)
             {
                 foreach (var oldSession in args.OldItems.Cast<AudioSession>())
                 {
-                    Console.WriteLine("Removed session: PID = {0}, {1}", oldSession.ProcessId, oldSession.SessionIdentifier);
+                    Console.WriteLine("Removed session: PID = {0}, {1}", oldSession.Process.Id, oldSession.Process.ProcessName);
                 }
             }
         }
