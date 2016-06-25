@@ -10,11 +10,11 @@ Check out [the latest release](https://github.com/btrzcinski/autoquiet/releases)
 
 ## Usage
 
-Usage: `AutoQuietConsole.exe process-to-dim.exe priority-process-to-monitor.exe [level-to-lower-volume-to]`
+Usage: `AutoQuietConsole.exe process-to-dim priority-process-to-monitor [level-to-lower-volume-to]`
 
 The level to lower the volume to when the priority process makes noise defaults to 10% if not specified.
 
-Example: `AutoQuietConsole.exe chrome.exe firefox.exe 10`
+Example: `AutoQuietConsole.exe chrome firefox 10`
 
 ## Requirements
 
