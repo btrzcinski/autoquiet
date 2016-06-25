@@ -138,7 +138,15 @@ namespace AutoQuietLib
                 throw gcnew System::Exception(L"Failed to get process ID from underlying IAudioSessionControl2");
             }
 
-            this->m_process = System::Diagnostics::Process::GetProcessById(processId);
+            try
+            {
+                this->m_process = System::Diagnostics::Process::GetProcessById(processId);
+            }
+            catch (...)
+            {
+                // Process may not be running anymore
+                this->m_process = nullptr;
+            }
         }
 
         void RegisterForEvents()

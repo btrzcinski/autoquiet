@@ -12,8 +12,8 @@ namespace AutoQuietLib
     {
     public:
         ProcessAudioWatcher(System::String^ processName)
-            : m_processName(processName)
         {
+            this->m_processName = processName->ToLowerInvariant();
             this->m_sessionList = gcnew System::Collections::ObjectModel::ObservableCollection<AudioSession^>();
             this->m_readOnlySessionList = gcnew System::Collections::ObjectModel::ReadOnlyObservableCollection<AudioSession^>(this->m_sessionList);
 
@@ -66,9 +66,13 @@ namespace AutoQuietLib
         IAudioSessionManager2* pSessionManager = nullptr;
         AudioSessionNotificationSinkCallback* pSessionNotificationCallback = nullptr;
 
-        void OnNewAudioSession(AudioSession^ newSession)
+        void OnNewAudioSession(AudioSession^ session)
         {
-            this->m_sessionList->Add(newSession);
+            if (session->Process != nullptr &&
+                session->Process->ProcessName->ToLowerInvariant()->Equals(this->m_processName))
+            {
+                this->m_sessionList->Add(session);
+            }
         }
 
         void InitializeSessionManager()
@@ -93,7 +97,11 @@ namespace AutoQuietLib
                 CComQIPtr<IAudioSessionControl2> spSessionControl2 = spSessionControl;
 
                 auto session = gcnew AudioSession(spSessionControl2);
-                this->m_sessionList->Add(session);
+                if (session->Process != nullptr &&
+                    session->Process->ProcessName->ToLowerInvariant()->Equals(this->m_processName))
+                {
+                    this->m_sessionList->Add(session);
+                }
             }
         }
 

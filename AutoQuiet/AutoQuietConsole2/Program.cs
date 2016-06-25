@@ -1,7 +1,6 @@
 ﻿using AutoQuietLib;
 using System;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -45,6 +44,7 @@ namespace AutoQuietConsole2
             {
                 using (var watcher = new ProcessAudioWatcher(processToDim))
                 {
+                    Console.WriteLine($"Watching process: {processToDim}");
                     foreach (var existingSession in watcher.SessionList)
                     {
                         Console.WriteLine("Existing session: PID = {0}, {1}", existingSession.Process.Id, existingSession.Process.ProcessName);
