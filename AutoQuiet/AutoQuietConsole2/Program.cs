@@ -48,6 +48,8 @@ namespace AutoQuietConsole2
                     foreach (var existingSession in watcher.SessionList)
                     {
                         Console.WriteLine("Existing session: PID = {0}, {1}", existingSession.Process.Id, existingSession.Process.ProcessName);
+                        existingSession.StateChanged += Session_StateChanged;
+                        existingSession.Disconnected += Session_Disconnected;
                     }
 
                     var c = (INotifyCollectionChanged)watcher.SessionList;
@@ -55,14 +57,22 @@ namespace AutoQuietConsole2
 
                     Console.WriteLine("Press a key to stop.");
                     Console.ReadKey(true);
-
-                    c.CollectionChanged -= SessionListChanged;
                 }
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error occurred: {ex.Message}");
             }
+        }
+
+        private static void Session_Disconnected(AudioSession sender, AudioSessionDisconnectReason reason)
+        {
+            Console.WriteLine("Session disconnected ({0}): PID = {1}, {2}", reason, sender.Process.Id, sender.Process.ProcessName);
+        }
+
+        private static void Session_StateChanged(AudioSession sender, AudioSessionState state)
+        {
+            Console.WriteLine("Session state changed ({0}): PID = {1}, {2}", state, sender.Process.Id, sender.Process.ProcessName);
         }
 
         private static void SessionListChanged(object sender, NotifyCollectionChangedEventArgs args)
@@ -72,6 +82,8 @@ namespace AutoQuietConsole2
                 foreach (var newSession in args.NewItems.Cast<AudioSession>())
                 {
                     Console.WriteLine("New session: PID = {0}, {1}", newSession.Process.Id, newSession.Process.ProcessName);
+                    newSession.Disconnected += Session_Disconnected;
+                    newSession.StateChanged += Session_StateChanged;
                 }
             }
             else if (args.Action == NotifyCollectionChangedAction.Remove)
@@ -79,6 +91,8 @@ namespace AutoQuietConsole2
                 foreach (var oldSession in args.OldItems.Cast<AudioSession>())
                 {
                     Console.WriteLine("Removed session: PID = {0}, {1}", oldSession.Process.Id, oldSession.Process.ProcessName);
+                    oldSession.Disconnected -= Session_Disconnected;
+                    oldSession.StateChanged -= Session_StateChanged;
                 }
             }
         }

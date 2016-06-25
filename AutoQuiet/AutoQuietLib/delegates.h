@@ -23,6 +23,6 @@ namespace AutoQuietLib
     
     delegate void AudioSessionCreatedEventHandler(AudioSession^ newSession);
 
-    delegate void AudioSessionStateChangedEventHandler(AudioSessionState state);
-    delegate void AudioSessionDisconnectedEventHandler(AudioSessionDisconnectReason reason);
+    public delegate void AudioSessionStateChangedEventHandler(AudioSession^ sender, AudioSessionState state);
+    public delegate void AudioSessionDisconnectedEventHandler(AudioSession^ sender, AudioSessionDisconnectReason reason);
 }

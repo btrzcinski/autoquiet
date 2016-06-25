@@ -68,7 +68,7 @@ namespace AutoQuietLib
 
             try
             {
-                this->m_stateDelegate->Invoke(managedEnum);
+                this->m_stateDelegate->Invoke(nullptr, managedEnum);
             }
             catch (...)
             {
@@ -111,7 +111,7 @@ namespace AutoQuietLib
 
             try
             {
-                this->m_disconnectedDelegate->Invoke(managedEnum);
+                this->m_disconnectedDelegate->Invoke(nullptr, managedEnum);
             }
             catch (...)
             {

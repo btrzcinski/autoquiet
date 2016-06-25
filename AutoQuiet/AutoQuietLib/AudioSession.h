@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioSessionEventsSinkCallback.h"
+#include "delegates.h"
 
 #include "AudioSessionEventsSink.h"
 #include "audiosessionenumeration.h"
@@ -90,6 +91,10 @@ namespace AutoQuietLib
             }
         }
 
+        event AudioSessionStateChangedEventHandler^ StateChanged;
+
+        event AudioSessionDisconnectedEventHandler^ Disconnected;
+
     internal:
         AudioSession(IAudioSessionControl2 *pSession)
         {
@@ -155,14 +160,14 @@ namespace AutoQuietLib
             }
         }
 
-        void OnNewSessionState(AudioSessionState state)
+        void OnNewSessionState(AudioSession^ sender, AudioSessionState state)
         {
-            System::Console::WriteLine(L"Session state changed to {0}: PID = {1}, {2}", state.ToString(), this->Process->Id, this->SessionIdentifier);
+            this->StateChanged(this, state);
         }
 
-        void OnDisconnected(AudioSessionDisconnectReason reason)
+        void OnDisconnected(AudioSession^ sender, AudioSessionDisconnectReason reason)
         {
-            System::Console::WriteLine(L"Session disconnected ({0}): PID = {1}, {2}", reason.ToString(), this->Process->Id, this->SessionIdentifier);
+            this->Disconnected(this, reason);
         }
     };
 }
