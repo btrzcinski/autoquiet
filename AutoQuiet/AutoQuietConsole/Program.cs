@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace AutoQuietConsole2
+namespace AutoQuietConsole
 {
     static class Program
     {

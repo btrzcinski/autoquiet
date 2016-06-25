@@ -5,7 +5,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 
-namespace AutoQuietConsole2
+namespace AutoQuietConsole
 {
     static class DimWhenActiveAlgorithm
     {
