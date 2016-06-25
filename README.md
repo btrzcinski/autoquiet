@@ -3,8 +3,8 @@
 ## What does it do?
 
 This project consists of two parts:
-* A library, *AutoQuietLib*, which can watch for and enumerate audio sessions based on process name (using **ProcessAudioWatcher**) and expose them in objects that allow the consumer to watch for events and perform actions on them (using **AudioSession**).
-* A console app, *AutoQuietConsole*, which will watch one process for audio and lower the volume of another process when audio begins perceptibly playing.
+* A library, **AutoQuietLib**, which can watch for and enumerate audio sessions based on process name (using *ProcessAudioWatcher*) and expose them in objects that allow the consumer to watch for events and perform actions on them (using *AudioSession*).
+* A console app, **AutoQuietConsole**, which will watch one process for audio and lower the volume of another process when audio begins perceptibly playing.
 
 ## Can I try it?
 
