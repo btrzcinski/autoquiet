@@ -6,15 +6,15 @@ This app will lower the volume of an app if another app starts playing audio.
 
 ## Can I try it?
 
-Sure, but you'll have to build it from source - there's no binary release yet.
+Check out [the latest release](https://github.com/btrzcinski/autoquiet/releases).
 
 ## Usage
 
-Usage: `AutoQuietConsole2.exe process-to-dim.exe priority-process-to-monitor.exe [level-to-lower-volume-to]`
+Usage: `AutoQuietConsole.exe process-to-dim.exe priority-process-to-monitor.exe [level-to-lower-volume-to]`
 
 The level to lower the volume to when the priority process makes noise defaults to 10% if not specified.
 
-Example: `AutoQuietConsole2.exe chrome.exe firefox.exe 10`
+Example: `AutoQuietConsole.exe chrome.exe firefox.exe 10`
 
 ## Requirements
 
