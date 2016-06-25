@@ -94,6 +94,20 @@ namespace AutoQuietLib
             }
         }
 
+        property float PeakMeterValue
+        {
+            float get()
+            {
+                float peakValue;
+                if (FAILED(this->pMeterInformation->GetPeakValue(&peakValue)))
+                {
+                    throw gcnew System::Exception(L"Failed to get peak meter value from IAudioMeterInformation");
+                }
+
+                return peakValue;
+            }
+        }
+
         event AudioSessionStateChangedEventHandler^ StateChanged;
 
         event AudioSessionDisconnectedEventHandler^ Disconnected;
@@ -117,15 +131,28 @@ namespace AutoQuietLib
                 this->pSession->Release();
                 this->pSession = nullptr;
             }
+
+            if (this->pVolume != nullptr)
+            {
+                this->pVolume->Release();
+                this->pVolume = nullptr;
+            }
+
+            if (this->pMeterInformation != nullptr)
+            {
+                this->pMeterInformation->Release();
+                this->pMeterInformation = nullptr;
+            }
         }
 
     private:
         bool m_disposed = false;
         System::Diagnostics::Process^ m_process;
 
-        IAudioSessionControl2 *pSession = nullptr;
-        ISimpleAudioVolume *pVolume = nullptr;
-        AudioSessionEventsSinkCallback *pEventsSinkCallback = nullptr;
+        IAudioSessionControl2* pSession = nullptr;
+        ISimpleAudioVolume* pVolume = nullptr;
+        IAudioMeterInformation* pMeterInformation = nullptr;
+        AudioSessionEventsSinkCallback* pEventsSinkCallback = nullptr;
 
         void InitializeSessionObjects(IAudioSessionControl2* pSession)
         {
@@ -140,6 +167,10 @@ namespace AutoQuietLib
             ISimpleAudioVolume *pVolume;
             IF_FAIL_THROW(this->pSession->QueryInterface(IID_PPV_ARGS(&pVolume)));
             this->pVolume = pVolume;
+
+            IAudioMeterInformation *pMeterInformation;
+            IF_FAIL_THROW(this->pSession->QueryInterface(IID_PPV_ARGS(&pMeterInformation)));
+            this->pMeterInformation = pMeterInformation;
         }
 
         void InitializeProcessObject()

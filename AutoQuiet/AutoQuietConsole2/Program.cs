@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace AutoQuietConsole2
 {
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
@@ -37,7 +37,7 @@ namespace AutoQuietConsole2
                 }
             }
 
-            DimWhenActiveAlgorithm.Run(processToDim, priorityProcess, loweredVolume);
+            DimWhenPeakMeterRegisters.Run(processToDim, priorityProcess, loweredVolume);
         }
     }
 }

@@ -9,8 +9,14 @@ namespace AutoQuietConsole2
 {
     static class DimWhenActiveAlgorithm
     {
+        private static float loweredVolume = 0.1f;
+        private static ProcessAudioWatcher priorityProcessWatcher = null;
+        private static ProcessAudioWatcher processToDimWatcher = null;
+
         internal static void Run(string processToDim, string priorityProcess, float loweredVolume)
         {
+            Console.WriteLine($"Using {nameof(DimWhenActiveAlgorithm)} algorithm");
+
             DimWhenActiveAlgorithm.loweredVolume = loweredVolume;
 
             try
@@ -48,10 +54,6 @@ namespace AutoQuietConsole2
                 Console.Error.WriteLine($"Error occurred: {ex.Message}");
             }
         }
-
-        private static float loweredVolume = 0.1f;
-        private static ProcessAudioWatcher priorityProcessWatcher = null;
-        private static ProcessAudioWatcher processToDimWatcher = null;
 
         private static void RecalculateProcessDimState(ProcessAudioWatcher process, ProcessAudioWatcher priorityProcess)
         {
