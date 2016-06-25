@@ -52,39 +52,5 @@ namespace AutoQuietConsole2
                 Console.Error.WriteLine($"Error occurred: {ex.Message}");
             }
         }
-
-        private static AudioSession GetFirstAudioSessionForProcessName(string processName)
-        {
-            var processCandidates = Process.GetProcessesByName(processName);
-            if (processCandidates.Length == 0)
-            {
-                throw new Exception($"{processName} is not running; try starting it first.");
-            }
-
-            AudioSession processAudioSession = null;
-            foreach (var candidate in processCandidates)
-            {
-                if (AudioSession.TryGetFirstAudioSessionForProcess(candidate, out processAudioSession))
-                {
-                    break;
-                }
-            }
-
-            if (processAudioSession == null)
-            {
-                throw new Exception($"Can't find audio session for {processName}; try playing audio first.");
-            }
-
-            return processAudioSession;
-        }
-
-        private static void LowerProcessVolumeWhenPriorityProcessMakesNoise(string processToDimName, string priorityProcessName, float loweredVolume)
-        {
-            var processToDimSession = GetFirstAudioSessionForProcessName(processToDimName);
-            var priorityProcessSession = GetFirstAudioSessionForProcessName(priorityProcessName);
-
-            Console.WriteLine($"{processToDimName} PID = {processToDimSession.ProcessId}");
-            Console.WriteLine($"{priorityProcessName} PID = {priorityProcessSession.ProcessId}");
-        }
     }
 }

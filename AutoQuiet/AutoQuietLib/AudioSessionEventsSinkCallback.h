@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioSession.h"
+#include "AudioSessionEventsSink.h"
 
 namespace AutoQuietLib
 {
@@ -27,12 +28,38 @@ namespace AutoQuietLib
     class AudioSessionEventsSinkCallback
     {
     public:
-        AudioSessionEventsSinkCallback(AudioStateChangedDelegate^ stateDelegate,
-            AudioSessionDisconnectedDelegate^ disconnectedDelegate)
-            : m_stateDelegate(stateDelegate)
-            , m_disconnectedDelegate(disconnectedDelegate)
+        AudioSessionEventsSinkCallback(IAudioSessionControl2* pAudioSessionControl,
+            AudioStateChangedDelegate^ stateDelegate,
+            AudioSessionDisconnectedDelegate^ disconnectedDelegate) :
+            m_spAudioSessionControl(pAudioSessionControl),
+            m_stateDelegate(stateDelegate),
+            m_disconnectedDelegate(disconnectedDelegate)
         {
         }
+
+        HRESULT Initialize()
+        {
+            if (m_spAudioSessionEvents != nullptr) return S_FALSE;
+
+            IF_FAIL_RET_HR(AudioSessionEventsSink::Create(&m_spAudioSessionEvents, this->GetStateCallback(), this->GetDisconnectedCallback()));
+            IF_FAIL_RET_HR(this->m_spAudioSessionControl->RegisterAudioSessionNotification(m_spAudioSessionEvents));
+
+            return S_OK;
+        }
+
+        virtual ~AudioSessionEventsSinkCallback()
+        {
+            if (m_spAudioSessionEvents != nullptr)
+            {
+                this->m_spAudioSessionControl->UnregisterAudioSessionNotification(m_spAudioSessionEvents);
+            }
+        }
+
+    private:
+        gcroot<AudioStateChangedDelegate^> m_stateDelegate;
+        gcroot<AudioSessionDisconnectedDelegate^> m_disconnectedDelegate;
+        CComPtr<IAudioSessionControl2> m_spAudioSessionControl;
+        CComPtr<IAudioSessionEvents> m_spAudioSessionEvents;
 
         std::function<void(::AudioSessionState)> GetStateCallback()
         {
@@ -96,9 +123,5 @@ namespace AutoQuietLib
 
             this->m_disconnectedDelegate->Invoke(managedEnum);
         }
-
-    private:
-        gcroot<AudioStateChangedDelegate^> m_stateDelegate;
-        gcroot<AudioSessionDisconnectedDelegate^> m_disconnectedDelegate;
     };
 }

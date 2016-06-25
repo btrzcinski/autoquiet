@@ -121,47 +121,29 @@ namespace AutoQuietLib
                 this->pSession->Release();
                 this->pSession = nullptr;
             }
-
-            if (this->pEvents != nullptr)
-            {
-                this->pEvents->Release();
-                this->pEvents = nullptr;
-            }
-
-            if (this->pEventsSinkCallback != nullptr)
-            {
-                delete this->pEventsSinkCallback;
-                this->pEventsSinkCallback = nullptr;
-            }
         }
 
     private:
         bool m_disposed = false;
         IAudioSessionControl2 *pSession = nullptr;
-
-        IAudioSessionEvents *pEvents = nullptr;
         AudioSessionEventsSinkCallback *pEventsSinkCallback = nullptr;
 
         void RegisterForEvents()
         {
             this->pEventsSinkCallback = new AudioSessionEventsSinkCallback(
+                this->pSession,
                 gcnew AudioStateChangedDelegate(this, &AudioSession::OnNewSessionState),
                 gcnew AudioSessionDisconnectedDelegate(this, &AudioSession::OnDisconnected));
             
-            CComPtr<IAudioSessionEvents> spEvents;
-            IF_FAIL_THROW(AudioSessionEventsSink::Create(&spEvents, this->pEventsSinkCallback->GetStateCallback(),
-                this->pEventsSinkCallback->GetDisconnectedCallback()));
-            IF_FAIL_THROW(this->pSession->RegisterAudioSessionNotification(spEvents));
-
-            this->pEvents = spEvents.Detach();
+            IF_FAIL_THROW(this->pEventsSinkCallback->Initialize());
         }
 
         void UnregisterForEvents()
         {
-            if (this->pSession != nullptr &&
-                this->pEvents != nullptr)
+            if (this->pEventsSinkCallback != nullptr)
             {
-                this->pSession->UnregisterAudioSessionNotification(this->pEvents);
+                delete this->pEventsSinkCallback;
+                this->pEventsSinkCallback = nullptr;
             }
         }
 
