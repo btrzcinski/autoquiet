@@ -161,16 +161,17 @@ namespace AutoQuietLib
                 throw gcnew System::ArgumentNullException(L"pSession");
             }
 
-            this->pSession = pSession;
-            this->pSession->AddRef();
+            CComPtr<IAudioSessionControl2> spSession = pSession;
 
-            ISimpleAudioVolume *pVolume;
-            IF_FAIL_THROW(this->pSession->QueryInterface(IID_PPV_ARGS(&pVolume)));
-            this->pVolume = pVolume;
+            CComPtr<ISimpleAudioVolume> spVolume;
+            IF_FAIL_THROW(spSession->QueryInterface(IID_PPV_ARGS(&spVolume)));
 
-            IAudioMeterInformation *pMeterInformation;
-            IF_FAIL_THROW(this->pSession->QueryInterface(IID_PPV_ARGS(&pMeterInformation)));
-            this->pMeterInformation = pMeterInformation;
+            CComPtr<IAudioMeterInformation> spMeterInformation;
+            IF_FAIL_THROW(spSession->QueryInterface(IID_PPV_ARGS(&spMeterInformation)));
+
+            this->pSession = spSession.Detach();
+            this->pMeterInformation = spMeterInformation.Detach();
+            this->pVolume = spVolume.Detach();
         }
 
         void InitializeProcessObject()
