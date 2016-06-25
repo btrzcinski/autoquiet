@@ -85,7 +85,14 @@ namespace AutoQuietLib
                 _ASSERT(false);
             }
 
-            this->m_stateDelegate->Invoke(managedEnum);
+            try
+            {
+                this->m_stateDelegate->Invoke(managedEnum);
+            }
+            catch (...)
+            {
+                // Throwing exceptions back to our native caller isn't good
+            }
         }
 
         std::function<void(::AudioSessionDisconnectReason)> GetDisconnectedCallback()
@@ -121,7 +128,14 @@ namespace AutoQuietLib
                 _ASSERT(false);
             }
 
-            this->m_disconnectedDelegate->Invoke(managedEnum);
+            try
+            {
+                this->m_disconnectedDelegate->Invoke(managedEnum);
+            }
+            catch (...)
+            {
+                // Throwing exceptions back to our native caller isn't good
+            }
         }
     };
 }

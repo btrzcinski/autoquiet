@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioSession.h"
+#include "AudioSessionNotificationSink.h"
 
 namespace AutoQuietLib
 {
@@ -9,10 +10,35 @@ namespace AutoQuietLib
     class AudioSessionNotificationSinkCallback
     {
     public:
-        AudioSessionNotificationSinkCallback(NewAudioSessionDelegate^ delegate)
-            : m_delegate(delegate)
+        AudioSessionNotificationSinkCallback(IAudioSessionManager2 *pAudioSessionManager,
+            NewAudioSessionDelegate^ delegate) :
+            m_spSessionManager(pAudioSessionManager),
+            m_delegate(delegate)
         {
         }
+
+        HRESULT Initialize()
+        {
+            if (m_spSessionNotification != nullptr) return S_FALSE;
+
+            IF_FAIL_RET_HR(AudioSessionNotificationSink::Create(&m_spSessionNotification, this->GetCallback()));
+            IF_FAIL_RET_HR(this->m_spSessionManager->RegisterSessionNotification(m_spSessionNotification));
+
+            return S_OK;
+        }
+
+        virtual ~AudioSessionNotificationSinkCallback()
+        {
+            if (m_spSessionNotification != nullptr)
+            {
+                m_spSessionManager->UnregisterSessionNotification(m_spSessionNotification);
+            }
+        }
+
+    private:
+        gcroot<NewAudioSessionDelegate^> m_delegate;
+        CComPtr<IAudioSessionManager2> m_spSessionManager;
+        CComPtr<IAudioSessionNotification> m_spSessionNotification;
 
         std::function<void(IAudioSessionControl*)> GetCallback()
         {
@@ -32,8 +58,5 @@ namespace AutoQuietLib
                 // Throwing exceptions back to our native caller isn't good
             }
         }
-
-    private:
-        gcroot<NewAudioSessionDelegate^> m_delegate;
     };
 }

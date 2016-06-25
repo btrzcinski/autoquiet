@@ -44,17 +44,6 @@ namespace AutoQuietLib
                 this->pSessionManager = nullptr;
             }
 
-            if (this->pSessionNotification)
-            {
-                this->pSessionNotification->Release();
-                this->pSessionNotification = nullptr;
-            }
-
-            if (this->pSessionNotificationCallback)
-            {
-                delete this->pSessionNotificationCallback;
-                this->pSessionNotificationCallback = nullptr;
-            }
         }
 
     private:
@@ -64,7 +53,6 @@ namespace AutoQuietLib
         System::Collections::Generic::List<AudioSession^>^ sessionList = gcnew System::Collections::Generic::List<AudioSession^>();
 
         IAudioSessionManager2* pSessionManager = nullptr;
-        IAudioSessionNotification* pSessionNotification = nullptr;
         AudioSessionNotificationSinkCallback* pSessionNotificationCallback = nullptr;
 
         void OnNewAudioSession(AudioSession^ newSession)
@@ -78,7 +66,7 @@ namespace AutoQuietLib
             CComPtr<IAudioSessionManager2> spSessionManager;
             IF_FAIL_THROW(GetAudioSessionManager(&spSessionManager));
 
-            this->pSessionManager = spSessionManager.Detach();;
+            this->pSessionManager = spSessionManager.Detach();
         }
 
         void EnumerateExistingSessions()
@@ -102,21 +90,18 @@ namespace AutoQuietLib
 
         void StartListeningForNewSessions()
         {
-            this->pSessionNotificationCallback = new AudioSessionNotificationSinkCallback(gcnew NewAudioSessionDelegate(this, &ProcessAudioWatcher::OnNewAudioSession));
+            this->pSessionNotificationCallback = new AudioSessionNotificationSinkCallback(this->pSessionManager,
+                gcnew NewAudioSessionDelegate(this, &ProcessAudioWatcher::OnNewAudioSession));
 
-            CComPtr<IAudioSessionNotification> spNotificationSink;
-            IF_FAIL_THROW(AudioSessionNotificationSink::Create(&spNotificationSink, this->pSessionNotificationCallback->GetCallback()));
-            IF_FAIL_THROW(this->pSessionManager->RegisterSessionNotification(spNotificationSink));
-
-            this->pSessionNotification = spNotificationSink.Detach();
+            IF_FAIL_THROW(this->pSessionNotificationCallback->Initialize());
         }
 
         void StopListeningForNewSessions()
         {
-            if (this->pSessionManager != nullptr &&
-                this->pSessionNotification != nullptr)
+            if (this->pSessionNotificationCallback)
             {
-                this->pSessionManager->UnregisterSessionNotification(this->pSessionNotification);
+                delete this->pSessionNotificationCallback;
+                this->pSessionNotificationCallback = nullptr;
             }
         }
     };
