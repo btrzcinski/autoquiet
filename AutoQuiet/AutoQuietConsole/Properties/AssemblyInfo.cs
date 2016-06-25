@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Barnett Trzcinski")]
-[assembly: AssemblyProduct("AutoQuietConsole2")]
+[assembly: AssemblyProduct("AutoQuietConsole")]
 [assembly: AssemblyCopyright("Copyright © 2016 Barnett Trzcinski.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
