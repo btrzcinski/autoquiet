@@ -1,6 +1,8 @@
 ﻿using AutoQuietLib;
 using System;
+using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 
 namespace AutoQuietConsole2
@@ -43,13 +45,41 @@ namespace AutoQuietConsole2
             {
                 using (var watcher = new ProcessAudioWatcher(processToDim))
                 {
+                    foreach (var existingSession in watcher.SessionList)
+                    {
+                        Console.WriteLine("Existing session: PID = {0}, {1}", existingSession.ProcessId, existingSession.SessionIdentifier);
+                    }
+
+                    var c = (INotifyCollectionChanged)watcher.SessionList;
+                    c.CollectionChanged += SessionListChanged;
+
                     Console.WriteLine("Press a key to stop.");
                     Console.ReadKey(true);
+
+                    c.CollectionChanged -= SessionListChanged;
                 }
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error occurred: {ex.Message}");
+            }
+        }
+
+        private static void SessionListChanged(object sender, NotifyCollectionChangedEventArgs args)
+        {
+            if (args.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach (var newSession in args.NewItems.Cast<AudioSession>())
+                {
+                    Console.WriteLine("New session: PID = {0}, {1}", newSession.ProcessId, newSession.SessionIdentifier);
+                }
+            }
+            else if (args.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (var oldSession in args.OldItems.Cast<AudioSession>())
+                {
+                    Console.WriteLine("Removed session: PID = {0}, {1}", oldSession.ProcessId, oldSession.SessionIdentifier);
+                }
             }
         }
     }

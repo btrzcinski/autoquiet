@@ -14,6 +14,9 @@ namespace AutoQuietLib
         ProcessAudioWatcher(System::String^ processName)
             : m_processName(processName)
         {
+            this->m_sessionList = gcnew System::Collections::ObjectModel::ObservableCollection<AudioSession^>();
+            this->m_readOnlySessionList = gcnew System::Collections::ObjectModel::ReadOnlyObservableCollection<AudioSession^>(this->m_sessionList);
+
             InitializeSessionManager();
             EnumerateExistingSessions();
             StartListeningForNewSessions();
@@ -31,6 +34,14 @@ namespace AutoQuietLib
             m_disposed = true;
         }
 
+        property System::Collections::ObjectModel::ReadOnlyObservableCollection<AudioSession^>^ SessionList
+        {
+            System::Collections::ObjectModel::ReadOnlyObservableCollection<AudioSession^>^ get()
+            {
+                return this->m_readOnlySessionList;
+            }
+        }
+
     protected:
         // Finalizer
         !ProcessAudioWatcher()
@@ -43,22 +54,21 @@ namespace AutoQuietLib
                 this->pSessionManager->Release();
                 this->pSessionManager = nullptr;
             }
-
         }
 
     private:
         bool m_disposed = false;
         System::String^ m_processName;
 
-        System::Collections::Generic::List<AudioSession^>^ sessionList = gcnew System::Collections::Generic::List<AudioSession^>();
+        System::Collections::ObjectModel::ObservableCollection<AudioSession^>^ m_sessionList;
+        System::Collections::ObjectModel::ReadOnlyObservableCollection<AudioSession^>^ m_readOnlySessionList;
 
         IAudioSessionManager2* pSessionManager = nullptr;
         AudioSessionNotificationSinkCallback* pSessionNotificationCallback = nullptr;
 
         void OnNewAudioSession(AudioSession^ newSession)
         {
-            System::Console::WriteLine(L"New session: PID = {0}, {1}", newSession->ProcessId, newSession->SessionIdentifier);
-            this->sessionList->Add(newSession);
+            this->m_sessionList->Add(newSession);
         }
 
         void InitializeSessionManager()
@@ -83,8 +93,7 @@ namespace AutoQuietLib
                 CComQIPtr<IAudioSessionControl2> spSessionControl2 = spSessionControl;
 
                 auto session = gcnew AudioSession(spSessionControl2);
-                System::Console::WriteLine(L"Existing session: PID = {0}, {1}", session->ProcessId, session->SessionIdentifier);
-                this->sessionList->Add(session);
+                this->m_sessionList->Add(session);
             }
         }
 
