@@ -100,7 +100,7 @@ namespace AutoQuietLib
         void StartListeningForNewSessions()
         {
             this->pSessionNotificationCallback = new AudioSessionNotificationSinkCallback(this->pSessionManager,
-                gcnew NewAudioSessionDelegate(this, &ProcessAudioWatcher::OnNewAudioSession));
+                gcnew AudioSessionCreatedEventHandler(this, &ProcessAudioWatcher::OnNewAudioSession));
 
             IF_FAIL_THROW(this->pSessionNotificationCallback->Initialize());
         }

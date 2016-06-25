@@ -140,8 +140,8 @@ namespace AutoQuietLib
         {
             this->pEventsSinkCallback = new AudioSessionEventsSinkCallback(
                 this->pSession,
-                gcnew AudioStateChangedDelegate(this, &AudioSession::OnNewSessionState),
-                gcnew AudioSessionDisconnectedDelegate(this, &AudioSession::OnDisconnected));
+                gcnew AudioSessionStateChangedEventHandler(this, &AudioSession::OnNewSessionState),
+                gcnew AudioSessionDisconnectedEventHandler(this, &AudioSession::OnDisconnected));
             
             IF_FAIL_THROW(this->pEventsSinkCallback->Initialize());
         }

@@ -136,6 +136,7 @@
     <ClInclude Include="AudioSession.h" />
     <ClInclude Include="AudioSessionEventsSinkCallback.h" />
     <ClInclude Include="AudioSessionNotificationSinkCallback.h" />
+    <ClInclude Include="delegates.h" />
     <ClInclude Include="ProcessAudioWatcher.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />

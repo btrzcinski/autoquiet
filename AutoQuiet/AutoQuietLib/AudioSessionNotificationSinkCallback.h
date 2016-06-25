@@ -2,16 +2,15 @@
 
 #include "AudioSession.h"
 #include "AudioSessionNotificationSink.h"
+#include "delegates.h"
 
 namespace AutoQuietLib
 {
-    delegate void NewAudioSessionDelegate(AudioSession^ newSession);
-
     class AudioSessionNotificationSinkCallback
     {
     public:
         AudioSessionNotificationSinkCallback(IAudioSessionManager2 *pAudioSessionManager,
-            NewAudioSessionDelegate^ delegate) :
+            AudioSessionCreatedEventHandler^ delegate) :
             m_spSessionManager(pAudioSessionManager),
             m_delegate(delegate)
         {
@@ -36,7 +35,7 @@ namespace AutoQuietLib
         }
 
     private:
-        gcroot<NewAudioSessionDelegate^> m_delegate;
+        gcroot<AudioSessionCreatedEventHandler^> m_delegate;
         CComPtr<IAudioSessionManager2> m_spSessionManager;
         CComPtr<IAudioSessionNotification> m_spSessionNotification;
 

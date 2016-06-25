@@ -2,35 +2,16 @@
 
 #include "AudioSession.h"
 #include "AudioSessionEventsSink.h"
+#include "delegates.h"
 
 namespace AutoQuietLib
 {
-    public enum class AudioSessionState
-    {
-        Inactive = 0,
-        Active = 1,
-        Expired = 2
-    };
-
-    public enum class AudioSessionDisconnectReason
-    {
-        DeviceRemoval = 0,
-        ServerShutdown = (DeviceRemoval + 1),
-        FormatChanged = (ServerShutdown + 1),
-        SessionLogoff = (FormatChanged + 1),
-        SessionDisconnected = (SessionLogoff + 1),
-        ExclusiveModeOverride = (SessionDisconnected + 1)
-    };
-
-    delegate void AudioStateChangedDelegate(AudioSessionState state);
-    delegate void AudioSessionDisconnectedDelegate(AudioSessionDisconnectReason reason);
-
     class AudioSessionEventsSinkCallback
     {
     public:
         AudioSessionEventsSinkCallback(IAudioSessionControl2* pAudioSessionControl,
-            AudioStateChangedDelegate^ stateDelegate,
-            AudioSessionDisconnectedDelegate^ disconnectedDelegate) :
+            AudioSessionStateChangedEventHandler^ stateDelegate,
+            AudioSessionDisconnectedEventHandler^ disconnectedDelegate) :
             m_spAudioSessionControl(pAudioSessionControl),
             m_stateDelegate(stateDelegate),
             m_disconnectedDelegate(disconnectedDelegate)
@@ -56,8 +37,8 @@ namespace AutoQuietLib
         }
 
     private:
-        gcroot<AudioStateChangedDelegate^> m_stateDelegate;
-        gcroot<AudioSessionDisconnectedDelegate^> m_disconnectedDelegate;
+        gcroot<AudioSessionStateChangedEventHandler^> m_stateDelegate;
+        gcroot<AudioSessionDisconnectedEventHandler^> m_disconnectedDelegate;
         CComPtr<IAudioSessionControl2> m_spAudioSessionControl;
         CComPtr<IAudioSessionEvents> m_spAudioSessionEvents;
 
