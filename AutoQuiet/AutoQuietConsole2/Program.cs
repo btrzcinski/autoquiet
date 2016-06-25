@@ -41,7 +41,11 @@ namespace AutoQuietConsole2
 
             try
             {
-                LowerProcessVolumeWhenPriorityProcessMakesNoise(processToDim, priorityProcess, loweredVolume);
+                using (var watcher = new ProcessAudioWatcher(processToDim))
+                {
+                    Console.WriteLine("Press a key to stop.");
+                    Console.ReadKey(true);
+                }
             }
             catch (Exception ex)
             {

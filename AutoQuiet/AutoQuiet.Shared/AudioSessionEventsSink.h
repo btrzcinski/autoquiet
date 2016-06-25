@@ -6,21 +6,25 @@ class AudioSessionEventsSink : public ComRefCntBase<IAudioSessionEvents>
 {
 public:
     using StateCallback = std::function<void(AudioSessionState)>;
+    using DisconnectedCallback = std::function<void(AudioSessionDisconnectReason)>;
 
 private:
     StateCallback stateCallback;
+    DisconnectedCallback disconnectedCallback;
 
-    AudioSessionEventsSink(StateCallback const& stateCallback)
+    AudioSessionEventsSink(StateCallback const& stateCallback, DisconnectedCallback const& disconnectedCallback)
     {
         this->stateCallback = stateCallback;
+        this->disconnectedCallback = disconnectedCallback;
     }
 
 public:
-    static HRESULT STDMETHODCALLTYPE Create(IAudioSessionEvents** ppNewSink, StateCallback const& stateCallback)
+    static HRESULT STDMETHODCALLTYPE Create(IAudioSessionEvents** ppNewSink, StateCallback const& stateCallback,
+        DisconnectedCallback const& disconnectedCallback)
     {
         if (ppNewSink == nullptr) return E_POINTER;
 
-        *ppNewSink = static_cast<IAudioSessionEvents*>(new AudioSessionEventsSink(stateCallback));
+        *ppNewSink = static_cast<IAudioSessionEvents*>(new AudioSessionEventsSink(stateCallback, disconnectedCallback));
         return S_OK;
     }
 
@@ -37,8 +41,6 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float NewVolume, BOOL NewMute, LPCGUID EventContext) override
     {
-        wprintf(L"New volume: %f, new mute: %s\r\n", NewVolume, (NewMute ? L"true" : L"false"));
-
         return S_OK;
     }
 
@@ -54,22 +56,6 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState NewState) override
     {
-        wchar_t *newStateStr = nullptr;
-        switch (NewState) {
-        case AudioSessionStateActive:
-            newStateStr = L"active";
-            break;
-        case AudioSessionStateExpired:
-            newStateStr = L"expired";
-            break;
-        case AudioSessionStateInactive:
-            newStateStr = L"inactive";
-            break;
-        default:
-            newStateStr = L"unknown";
-        }
-
-        wprintf(L"New state: %d (%ls)\r\n", NewState, newStateStr);
         this->stateCallback(NewState);
 
         return S_OK;
@@ -77,6 +63,8 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason DisconnectReason) override
     {
+        this->disconnectedCallback(DisconnectReason);
+
         return S_OK;
     }
 };

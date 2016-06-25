@@ -62,7 +62,35 @@ namespace AutoQuietLib
             }
         }
 
-    private:
+        property System::String^ SessionIdentifier
+        {
+            System::String^ get()
+            {
+                CComHeapPtr<wchar_t> sessionIdentifier;
+                if (FAILED(this->pSession->GetSessionIdentifier(&sessionIdentifier)))
+                {
+                    throw gcnew System::Exception(L"Failed to get session identifier from underlying IAudioSessionControl2");
+                }
+
+                return gcnew System::String(sessionIdentifier);
+            }
+        }
+
+        property System::String^ SessionInstanceIdentifier
+        {
+            System::String^ get()
+            {
+                CComHeapPtr<wchar_t> sessionInstanceIdentifier;
+                if (FAILED(this->pSession->GetSessionInstanceIdentifier(&sessionInstanceIdentifier)))
+                {
+                    throw gcnew System::Exception(L"Failed to get session instance identifier from underlying IAudioSessionControl2");
+                }
+
+                return gcnew System::String(sessionInstanceIdentifier);
+            }
+        }
+
+    internal:
         AudioSession(IAudioSessionControl2 *pSession)
         {
             if (pSession == nullptr)
@@ -73,6 +101,8 @@ namespace AutoQuietLib
             this->pSession = pSession;
             this->pSession->AddRef();
         }
+
+    private:
 
         IAudioSessionControl2 *pSession;
     };

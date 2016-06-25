@@ -28,5 +28,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE OnSessionCreated(IAudioSessionControl* NewSession) override
     {
         this->sessionCreatedCallback(NewSession);
+
+        return S_OK;
     }
 };

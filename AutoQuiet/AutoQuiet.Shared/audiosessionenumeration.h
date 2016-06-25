@@ -10,8 +10,7 @@ HRESULT GetAudioSessionManager(IAudioSessionManager2 **ppSessionManager)
     CComPtr<IMMDevice> spDefaultDevice;
     IF_FAIL_RET_HR(spEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &spDefaultDevice));
 
-    CComPtr<IAudioSessionManager2> spSessionManager;
-    IF_FAIL_RET_HR(spDefaultDevice->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, nullptr, (void**)&spSessionManager));
+    IF_FAIL_RET_HR(spDefaultDevice->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, nullptr, (void**)ppSessionManager));
 
     return S_OK;
 }

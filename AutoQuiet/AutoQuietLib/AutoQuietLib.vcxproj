@@ -132,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioSession.h" />
+    <ClInclude Include="AudioSessionNotificationSinkCallback.h" />
     <ClInclude Include="ProcessAudioWatcher.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />

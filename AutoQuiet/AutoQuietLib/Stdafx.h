@@ -20,6 +20,8 @@
 #include <audiopolicy.h> // Audio session interfaces/classes
 #include <endpointvolume.h> // IAudioMeterInformation
 
+#include <vcclr.h>
+
 #include <cstdio>
 #include <functional>
 #include <memory>

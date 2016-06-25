@@ -218,9 +218,14 @@ HRESULT LowerSessionVolumeWhenPrioritySessionBecomesActive(IAudioSessionControl2
         }
     };
 
+    auto doNothingWhenSessionIsDisconnectedFn =
+        [](AudioSessionDisconnectReason reason)
+    {
+    };
+
     CComPtr<IAudioSessionEvents> spPrioritySessionEventSink;
     if (FAILED(hr = AudioSessionEventsSink::Create(&spPrioritySessionEventSink,
-        dimSessionWhenPrioritySessionIsActiveCallbackFn))) {
+        dimSessionWhenPrioritySessionIsActiveCallbackFn, doNothingWhenSessionIsDisconnectedFn))) {
         fwprintf(stderr, L"Failed to create new audio session events sink for priority session: %#010x\r\n", hr);
         return hr;
     }
