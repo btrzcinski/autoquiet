@@ -70,6 +70,7 @@ namespace AutoQuietLib
         void OnNewAudioSession(AudioSession^ newSession)
         {
             System::Console::WriteLine(L"New session: PID = {0}, {1}", newSession->ProcessId, newSession->SessionIdentifier);
+            this->sessionList->Add(newSession);
         }
 
         void InitializeSessionManager()

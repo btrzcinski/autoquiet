@@ -1,5 +1,8 @@
 #pragma once
 
+#include "AudioSessionEventsSinkCallback.h"
+
+#include "AudioSessionEventsSink.h"
 #include "audiosessionenumeration.h"
 
 namespace AutoQuietLib
@@ -39,13 +42,16 @@ namespace AutoQuietLib
             return true;
         }
 
-        virtual ~AudioSession()
+        // Dispose
+        ~AudioSession()
         {
-            if (this->pSession != nullptr)
-            {
-                this->pSession->Release();
-                this->pSession = nullptr;
-            }
+            if (m_disposed) return;
+
+            // Dispose of managed resources
+
+            // Call Finalizer
+            this->!AudioSession();
+            m_disposed = true;
         }
 
         property int ProcessId
@@ -100,10 +106,73 @@ namespace AutoQuietLib
 
             this->pSession = pSession;
             this->pSession->AddRef();
+
+            RegisterForEvents();
+        }
+
+    protected:
+        // Finalizer
+        !AudioSession()
+        {
+            UnregisterForEvents();
+
+            if (this->pSession != nullptr)
+            {
+                this->pSession->Release();
+                this->pSession = nullptr;
+            }
+
+            if (this->pEvents != nullptr)
+            {
+                this->pEvents->Release();
+                this->pEvents = nullptr;
+            }
+
+            if (this->pEventsSinkCallback != nullptr)
+            {
+                delete this->pEventsSinkCallback;
+                this->pEventsSinkCallback = nullptr;
+            }
         }
 
     private:
+        bool m_disposed = false;
+        IAudioSessionControl2 *pSession = nullptr;
 
-        IAudioSessionControl2 *pSession;
+        IAudioSessionEvents *pEvents = nullptr;
+        AudioSessionEventsSinkCallback *pEventsSinkCallback = nullptr;
+
+        void RegisterForEvents()
+        {
+            this->pEventsSinkCallback = new AudioSessionEventsSinkCallback(
+                gcnew AudioStateChangedDelegate(this, &AudioSession::OnNewSessionState),
+                gcnew AudioSessionDisconnectedDelegate(this, &AudioSession::OnDisconnected));
+            
+            CComPtr<IAudioSessionEvents> spEvents;
+            IF_FAIL_THROW(AudioSessionEventsSink::Create(&spEvents, this->pEventsSinkCallback->GetStateCallback(),
+                this->pEventsSinkCallback->GetDisconnectedCallback()));
+            IF_FAIL_THROW(this->pSession->RegisterAudioSessionNotification(spEvents));
+
+            this->pEvents = spEvents.Detach();
+        }
+
+        void UnregisterForEvents()
+        {
+            if (this->pSession != nullptr &&
+                this->pEvents != nullptr)
+            {
+                this->pSession->UnregisterAudioSessionNotification(this->pEvents);
+            }
+        }
+
+        void OnNewSessionState(AudioSessionState state)
+        {
+            System::Console::WriteLine(L"Session state changed to {0}: PID = {1}, {2}", state.ToString(), this->ProcessId, this->SessionIdentifier);
+        }
+
+        void OnDisconnected(AudioSessionDisconnectReason reason)
+        {
+            System::Console::WriteLine(L"Session disconnected ({0}): PID = {1}, {2}", reason.ToString(), this->ProcessId, this->SessionIdentifier);
+        }
     };
 }

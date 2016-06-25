@@ -33,6 +33,9 @@
     <ClInclude Include="AudioSessionNotificationSinkCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AudioSessionEventsSinkCallback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp">
